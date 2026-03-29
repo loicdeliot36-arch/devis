@@ -2,7 +2,9 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="RD Ménage à Domicile - Services de ménage professionnels">
+    <meta name="keywords" content="ménage, nettoyage, services, domicile, professionnel">
     <title>{% block title %}RD Ménage à Domicile{% endblock %}</title>
     <link rel="stylesheet" href="/static/style.css">
     <link rel="icon" href="/static/logo.png" type="image/png">
@@ -19,22 +21,30 @@
                     </div>
                 </div>
                 <nav class="nav">
-                    <a href="/" class="nav-link">Accueil</a>
-                    <a href="/contact" class="nav-link">Contact</a>
-                    {% if user %}
-                        <a href="/dashboard" class="nav-link">Mon espace</a>
-                        <a href="/profile" class="nav-link">Mon profil</a>
-                        {% if user.role == 'admin' %}
-                        <a href="/admin/messages" class="nav-link">Messages</a>
-                        <a href="/admin/users" class="nav-link">Utilisateurs</a>
-                        <a href="/admin/sync" class="nav-link">Sync</a>
+                    <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                    
+                    <div class="nav-menu" id="navMenu">
+                        <a href="/" class="nav-link">Accueil</a>
+                        <a href="/contact" class="nav-link">Contact</a>
+                        {% if user %}
+                            <a href="/dashboard" class="nav-link">Mon espace</a>
+                            <a href="/profile" class="nav-link">Mon profil</a>
+                            {% if user.role == 'admin' %}
+                            <a href="/admin/messages" class="nav-link">Messages</a>
+                            <a href="/admin/users" class="nav-link">Utilisateurs</a>
+                            <a href="/admin/sync" class="nav-link">Sync</a>
+                            {% endif %}
+                            <span class="nav-link user-info">{{ user.prenom }} {{ user.nom }}</span>
+                            <a href="/logout" class="nav-link">Déconnexion</a>
+                        {% else %}
+                            <a href="/login" class="nav-link">Connexion</a>
+                            <a href="/register" class="nav-link">Inscription</a>
                         {% endif %}
-                        <span class="nav-link user-info">{{ user.prenom }} {{ user.nom }}</span>
-                        <a href="/logout" class="nav-link">Déconnexion</a>
-                    {% else %}
-                        <a href="/login" class="nav-link">Connexion</a>
-                        <a href="/register" class="nav-link">Inscription</a>
-                    {% endif %}
+                    </div>
                 </nav>
             </div>
         </div>
@@ -95,5 +105,23 @@
     </script>
     
     {% block scripts %}{% endblock %}
+<script>
+        // Menu mobile toggle
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('active');
+        }
+        
+        // Fermer le menu mobile quand on clique sur un lien
+        document.addEventListener('DOMContentLoaded', function() {
+            const navLinks = document.querySelectorAll('.nav-link');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    const navMenu = document.getElementById('navMenu');
+                    navMenu.classList.remove('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html>

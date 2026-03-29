@@ -43,7 +43,21 @@
 
                     <div class="form-group">
                         <label for="telephone">Téléphone</label>
-                        <input type="tel" id="telephone" name="telephone" value="{{ user.telephone or '' }}" placeholder="06 12 34 56 78">
+                        <div class="phone-input">
+                            <div class="phone-prefix">+33</div>
+                            <input type="tel" id="telephone" name="telephone" 
+                                class="phone-format" 
+                                value="{{ user.telephone or '' }}" 
+                                placeholder="6 12 34 56 78"
+                                pattern="[0-9\s]{10,15}"
+                                maxlength="15">
+                        </div>
+                        <div class="phone-hint">Format : 06 12 34 56 78 ou 07 12 34 56 78</div>
+                        <div class="phone-formats">
+                            <span class="phone-format-example">06 12 34 56 78</span>
+                            <span class="phone-format-example">07 12 34 56 78</span>
+                            <span class="phone-format-example">01 23 45 67 89</span>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -346,4 +360,40 @@
     }
 }
 </style>
+
+<link rel="stylesheet" href="/static/phone_optimized.css">
+
+<script>
+// Formatage automatique du téléphone
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInput = document.getElementById('telephone');
+    if (phoneInput) {
+        phoneInput.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formatted = '';
+            
+            // Formatage : XX XX XX XX XX
+            for (let i = 0; i < value.length && i < 10; i++) {
+                if (i > 0 && i % 2 === 0) {
+                    formatted += ' ';
+                }
+                formatted += value[i];
+            }
+            
+            e.target.value = formatted;
+            
+            // Validation visuelle
+            if (value.length === 10 && /^[67]/.test(value)) {
+                e.target.classList.add('phone-valid');
+                e.target.classList.remove('phone-invalid');
+            } else if (value.length > 0) {
+                e.target.classList.add('phone-invalid');
+                e.target.classList.remove('phone-valid');
+            } else {
+                e.target.classList.remove('phone-valid', 'phone-invalid');
+            }
+        });
+    }
+});
+</script>
 {% endblock %}

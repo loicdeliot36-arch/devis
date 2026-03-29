@@ -21,7 +21,7 @@ class EmailService:
         """Methode interne pour etablir la connexion SMTP avec handshake complet"""
         try:
             print(f"Connexion a {self.smtp_host}:{self.smtp_port}")
-            server = smtplib.SMTP(self.smtp_host, self.smtp_port)
+            server = smtplib.SMTP(self.smtp_host, self.smtp_port, timeout=10)
             
             # Handshake SMTP complet pour Gmail
             print("Envoi EHLO...")
@@ -44,18 +44,13 @@ class EmailService:
             raise e
     
     def send_contact_notification(self, nom: str, email: str, telephone: str, message: str) -> bool:
-        """Envoyer une notification à l'admin pour un nouveau message de contact"""
-        server = None
+        """Envoie une notification au admin pour un nouveau contact"""
         try:
-            # Créer le message
+            # Essayer d'envoyer l'email
             msg = MIMEMultipart()
             msg['From'] = self.smtp_user
             msg['To'] = self.admin_email
-            msg['Subject'] = f"[RD MENAGE] Nouveau message de {nom} ({email})"
-            msg['Reply-To'] = email  # Ajouter Reply-To pour pouvoir répondre directement
-            
-            # Ajouter un lien de synchronisation webhook (à remplacer après déploiement)
-            # sync_url = "https://votre-domaine-render.com/webhook/gmail-sync"
+            msg['Subject'] = f"[RD MENAGE] Nouveau message de {nom}"
             
             body = f"""
 Nouveau message de contact reçu :
@@ -69,32 +64,22 @@ Message :
 {message}
 
 ---
-📧 Pour synchroniser votre réponse automatiquement : 
-1. Répondez à cet email depuis Gmail
-2. La synchronisation se fera automatiquement toutes les 5 minutes
-3. Ou allez sur l'admin : /admin/sync
-
 Cet message a été envoyé depuis le formulaire de contact du site RD Ménage à Domicile.
             """
             
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
             
-            # Se connecter et envoyer
             server = self._connect()
             server.send_message(msg)
-            print(f"Email de notification envoye a {self.admin_email}")
+            server.quit()
+            
+            print("Email de notification envoyé avec succès")
             return True
             
         except Exception as e:
             print(f"Erreur envoi email notification: {e}")
+            # Ne pas lever d'exception pour ne pas bloquer le formulaire
             return False
-        finally:
-            if server:
-                try:
-                    server.quit()
-                    print("Connexion SMTP fermee")
-                except:
-                    pass
     
     def send_response_to_client(self, client_email: str, client_name: str, response: str) -> bool:
         """Envoyer la réponse de l'admin au client"""

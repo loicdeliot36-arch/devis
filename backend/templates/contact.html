@@ -58,8 +58,16 @@
                         
                         <div class="form-group">
                             <label for="telephone">Téléphone</label>
-                            <input type="tel" id="telephone" name="telephone" class="form-control" 
-                                {% if user %}value="{{ user.telephone or '' }}" placeholder="Entrez votre numéro"{% endif %}>
+                            <div class="phone-input">
+                                <div class="phone-prefix">+33</div>
+                                <input type="tel" id="telephone" name="telephone" 
+                                    class="phone-format" 
+                                    {% if user %}value="{{ user.telephone or '' }}"{% endif %}
+                                    placeholder="6 12 34 56 78"
+                                    pattern="[0-9\s]{10,15}"
+                                    maxlength="15">
+                            </div>
+                            <div class="phone-hint">Format : 06 12 34 56 78 ou 07 12 34 56 78</div>
                         </div>
                         
                         <div class="form-group">
@@ -89,8 +97,16 @@
                         
                         <div class="form-group">
                             <label for="devis-telephone">Téléphone</label>
-                            <input type="tel" id="devis-telephone" name="telephone" class="form-control" 
-                                {% if user %}value="{{ user.telephone or '' }}" placeholder="Entrez votre numéro"{% endif %}>
+                            <div class="phone-input">
+                                <div class="phone-prefix">+33</div>
+                                <input type="tel" id="devis-telephone" name="telephone" 
+                                    class="phone-format" 
+                                    {% if user %}value="{{ user.telephone or '' }}"{% endif %}
+                                    placeholder="6 12 34 56 78"
+                                    pattern="[0-9\s]{10,15}"
+                                    maxlength="15">
+                            </div>
+                            <div class="phone-hint">Format : 06 12 34 56 78 ou 07 12 34 56 78</div>
                         </div>
                         
                         <div class="form-group">
@@ -241,6 +257,8 @@
 }
 </style>
 
+<link rel="stylesheet" href="/static/phone_optimized.css">
+
 <script>
 // Gestion des formulaires avec JavaScript
 document.querySelectorAll('.contact-form').forEach(form => {
@@ -267,6 +285,39 @@ document.querySelectorAll('.contact-form').forEach(form => {
         } catch (error) {
             showNotification('Erreur de connexion. Veuillez réessayer.', 'error');
         }
+    });
+});
+
+// Formatage automatique du téléphone pour tous les champs
+document.addEventListener('DOMContentLoaded', function() {
+    const phoneInputs = document.querySelectorAll('input[type="tel"]');
+    
+    phoneInputs.forEach(input => {
+        input.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\s/g, '');
+            let formatted = '';
+            
+            // Formatage : XX XX XX XX XX
+            for (let i = 0; i < value.length && i < 10; i++) {
+                if (i > 0 && i % 2 === 0) {
+                    formatted += ' ';
+                }
+                formatted += value[i];
+            }
+            
+            e.target.value = formatted;
+            
+            // Validation visuelle
+            if (value.length === 10 && /^[67]/.test(value)) {
+                e.target.classList.add('phone-valid');
+                e.target.classList.remove('phone-invalid');
+            } else if (value.length > 0) {
+                e.target.classList.add('phone-invalid');
+                e.target.classList.remove('phone-valid');
+            } else {
+                e.target.classList.remove('phone-valid', 'phone-invalid');
+            }
+        });
     });
 });
 </script>
