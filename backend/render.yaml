@@ -1,0 +1,51 @@
+services:
+  # Service web principal
+  - type: web
+    name: rd-menage
+    env: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "uvicorn main:app --host 0.0.0.0 --port $PORT"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      # Variables SMTP pour les emails
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      # Variables Resend (optionnelles)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RECIPIENT_EMAIL
+        sync: false
+
+  # Cron Job pour la synchronisation automatique
+  - type: cron
+    name: email-sync
+    schedule: "*/5 * * * *"  # Toutes les 5 minutes
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python render_sync.py"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.9
+      # Variables SMTP pour la synchronisation
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+
+databases:
+  # SQLite est inclus dans Python, pas besoin de base de données externe

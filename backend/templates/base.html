@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RD Ménage à Domicile{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <link rel="icon" href="/static/logo.png" type="image/png">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/static/logo.png" alt="RD Ménage" class="logo-img">
+                    <div class="logo-text">
+                        <h1>RD MÉNAGE</h1>
+                        <p>À Domicile</p>
+                    </div>
+                </div>
+                <nav class="nav">
+                    <a href="/" class="nav-link">Accueil</a>
+                    <a href="/contact" class="nav-link">Contact</a>
+                    {% if user %}
+                        <a href="/dashboard" class="nav-link">Mon espace</a>
+                        {% if user.role == 'admin' %}
+                        <a href="/admin/messages" class="nav-link">Messages</a>
+                        <a href="/admin/users" class="nav-link">Utilisateurs</a>
+                        <a href="/admin/sync" class="nav-link">Sync</a>
+                        {% endif %}
+                        <a href="/logout" class="nav-link">Déconnexion</a>
+                    {% else %}
+                        <a href="/login" class="nav-link">Connexion</a>
+                        <a href="/register" class="nav-link">Inscription</a>
+                    {% endif %}
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <h3>RD Ménage à Domicile</h3>
+                    <p>Services de ménage professionnels</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <p>📞 07 82 71 41 55</p>
+                    <p>✉️ racheldemange702@gmail.com</p>
+                    <p>📍 18 rue de la Charrière, 70240 Saulx</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Informations</h4>
+                    <p>SIRET : 518 273 362 00047</p>
+                    <p>🌐 <a href="https://devis-t5m6.onrender.com" target="_blank">devis-t5m6.onrender.com</a></p>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 RD Ménage à Domicile. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Messages flash
+        const urlParams = new URLSearchParams(window.location.search);
+        const message = urlParams.get('message');
+        if (message) {
+            showNotification(message, 'success');
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification notification-${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
+        }
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

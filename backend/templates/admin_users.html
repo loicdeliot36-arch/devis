@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+
+{% block title %}Utilisateurs - Administration{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="container">
+        <div class="admin-header">
+            <h1>Gestion des utilisateurs</h1>
+            <p>Ajoutez et gérez les comptes administrateurs</p>
+        </div>
+        
+        {% if request.query_params.get('success') %}
+        <div class="alert alert-success">
+            ✅ Utilisateur ajouté avec succès !
+        </div>
+        {% endif %}
+        
+        {% if request.query_params.get('deleted') %}
+        <div class="alert alert-success">
+            ✅ Utilisateur supprimé avec succès !
+        </div>
+        {% endif %}
+        
+        {% if request.query_params.get('role_changed') %}
+        <div class="alert alert-success">
+            ✅ Rôle modifié avec succès !
+        </div>
+        {% endif %}
+        
+        {% if request.query_params.get('error') %}
+        <div class="alert alert-error">
+            {% if request.query_params.get('error') == 'email_exists' %}
+            ❌ Cet email existe déjà !
+            {% elif request.query_params.get('error') == 'cant_delete_self' %}
+            ❌ Vous ne pouvez pas supprimer votre propre compte !
+            {% elif request.query_params.get('error') == 'cant_change_own_role' %}
+            ❌ Vous ne pouvez pas modifier votre propre rôle !
+            {% elif request.query_params.get('error') == 'user_not_found' %}
+            ❌ Utilisateur non trouvé !
+            {% else %}
+            ❌ Une erreur est survenue.
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <!-- Formulaire d'ajout -->
+        <div class="add-user-section">
+            <div class="form-card">
+                <h2>Ajouter un utilisateur</h2>
+                <form method="post" action="/admin/users/add" class="add-user-form">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="nom">Nom *</label>
+                            <input type="text" id="nom" name="nom" required class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="prenom">Prénom *</label>
+                            <input type="text" id="prenom" name="prenom" required class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email">Email *</label>
+                            <input type="email" id="email" name="email" required class="form-control">
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="password">Mot de passe *</label>
+                            <input type="password" id="password" name="password" required class="form-control">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="role">Rôle *</label>
+                            <select id="role" name="role" required class="form-control">
+                                <option value="user">Utilisateur</option>
+                                <option value="admin">Administrateur</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <!-- Espace vide pour alignement -->
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <span>➕ Ajouter l'utilisateur</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Liste des utilisateurs -->
+        <div class="users-table">
+            <h2>Utilisateurs existants</h2>
+            {% if users %}
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Nom</th>
+                            <th>Prénom</th>
+                            <th>Email</th>
+                            <th>Rôle</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user_item in users %}
+                        <tr class="{% if user_item.role == 'admin' %}admin-row{% else %}user-row{% endif %}">
+                            <td>{{ user_item.id }}</td>
+                            <td>{{ user_item.nom or '-' }}</td>
+                            <td>{{ user_item.prenom or '-' }}</td>
+                            <td>{{ user_item.email }}</td>
+                            <td>
+                                <span class="role-badge {% if user_item.role == 'admin' %}role-admin{% else %}role-user{% endif %}">
+                                    {% if user_item.role == 'admin' %}Administrateur{% else %}Utilisateur{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if user_item.id != user.id %}
+                                    <form method="post" action="/admin/users/{{ user_item.id }}/toggle-role" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm {% if user_item.role == 'admin' %}btn-warning{% else %}btn-success{% endif %}">
+                                            {% if user_item.role == 'admin' %}Rétrograder{% else %}Promouvoir{% endif %}
+                                        </button>
+                                    </form>
+                                    <form method="post" action="/admin/users/{{ user_item.id }}/delete" 
+                                          onsubmit="return confirm('Êtes-vous sûr de vouloir supprimer cet utilisateur ?')" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-danger">Supprimer</button>
+                                    </form>
+                                    {% else %}
+                                    <span class="current-user-badge">Vous</span>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">👥</div>
+                <h3>Aucun utilisateur</h3>
+                <p>Aucun utilisateur trouvé dans la base de données.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    padding: 2rem 0;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+}
+
+.admin-header h1 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.admin-header p {
+    color: var(--dark-gray);
+    margin: 0;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-success {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+}
+
+.alert-error {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+}
+
+.add-user-section {
+    margin-bottom: 3rem;
+}
+
+.form-card {
+    background-color: var(--white);
+    padding: 2rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.form-card h2 {
+    color: var(--primary-blue);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.add-user-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group label {
+    color: var(--dark-gray);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-control {
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+.users-table {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    padding: 2rem;
+}
+
+.users-table h2 {
+    color: var(--primary-blue);
+    margin-bottom: 1.5rem;
+}
+
+.table-responsive {
+    overflow-x: auto;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 1rem;
+    text-align: left;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+th {
+    background-color: var(--light-gray);
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.admin-row {
+    background-color: #fff3cd;
+}
+
+.user-row {
+    background-color: #f8f9fa;
+}
+
+.role-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.role-admin {
+    background-color: #dc3545;
+    color: white;
+}
+
+.role-user {
+    background-color: #6c757d;
+    color: white;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.action-buttons form {
+    margin: 0;
+}
+
+.btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+}
+
+.btn-success {
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-success:hover {
+    background-color: #218838;
+}
+
+.btn-warning {
+    background-color: #ffc107;
+    color: #212529;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-warning:hover {
+    background-color: #e0a800;
+}
+
+.btn-danger {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-danger:hover {
+    background-color: #c82333;
+}
+
+.current-user-badge {
+    background-color: #17a2b8;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+}
+
+.empty-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.empty-state h3 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.empty-state p {
+    color: var(--dark-gray);
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .form-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    table {
+        font-size: 0.875rem;
+    }
+    
+    th, td {
+        padding: 0.5rem;
+    }
+}
+</style>
+{% endblock %}

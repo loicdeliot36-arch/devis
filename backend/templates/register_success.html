@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Inscription réussie - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <img src="/static/logo.png" alt="RD Ménage" class="auth-logo-img">
+                <h2>RD Ménage</h2>
+            </div>
+            <div class="success-icon">✅</div>
+            <h1>Inscription réussie !</h1>
+            <p>Votre compte a été créé avec succès</p>
+        </div>
+        
+        <div class="success-message">
+            <div class="success-info">
+                <h3>Bienvenue dans votre espace personnel</h3>
+                <p>Votre compte avec l'email <strong>{{ email }}</strong> a été créé.</p>
+                <p>Vous pouvez maintenant vous connecter et accéder à toutes les fonctionnalités.</p>
+            </div>
+            
+            <div class="success-actions">
+                <a href="/login" class="btn btn-primary btn-full">Se connecter maintenant</a>
+                <a href="/" class="btn btn-secondary btn-full">Retour à l'accueil</a>
+            </div>
+        </div>
+        
+        <div class="auth-footer">
+            <p>Questions ? <a href="/contact">Contactez-nous</a></p>
+        </div>
+    </div>
+</div>
+
+<style>
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    color: #28a745;
+}
+
+.success-message {
+    text-align: center;
+    padding: 2rem 0;
+}
+
+.success-info h3 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.success-info p {
+    color: var(--dark-gray);
+    margin-bottom: 0.5rem;
+    line-height: 1.6;
+}
+
+.success-actions {
+    margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 1rem;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--primary-blue);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #1d4ed8;
+    transform: translateY(-2px);
+}
+
+.btn-secondary {
+    background-color: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: #5a6268;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}

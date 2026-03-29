@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Tableau de bord - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="container">
+        <div class="dashboard-header">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/static/logo.png" alt="RD Ménage" class="logo-img">
+                    <div class="logo-text">
+                        <h1>RD MÉNAGE</h1>
+                        <p>À Domicile</p>
+                    </div>
+                </div>
+                <div class="user-info">
+                    <h1>Bienvenue {{ user.email.split('@')[0] }}</h1>
+                    <p>Accédez à votre espace personnel</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="dashboard-content">
+            <div class="welcome-card">
+                <div class="card-icon">👋</div>
+                <h2>Bonjour {{ user.email.split('@')[0] }} !</h2>
+                <p>Vous êtes connecté en tant que {% if user.role == 'admin' %}administrateur{% else %}utilisateur{% endif %}</p>
+                
+                {% if user.role == 'admin' %}
+                <div class="admin-section">
+                    <h3>Accès administrateur</h3>
+                    <p>Accédez à l'espace d'administration pour gérer les contacts.</p>
+                    <a href="/admin" class="btn btn-primary">Espace admin</a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="dashboard-grid">
+                <div class="dashboard-card">
+                    <div class="card-icon">📧</div>
+                    <h3>Contact</h3>
+                    <p>Envoyez-nous un message pour toute question ou demande.</p>
+                    <a href="/contact" class="btn btn-secondary">Contacter</a>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-icon">📋</div>
+                    <h3>Devis</h3>
+                    <p>Demandez un devis personnalisé pour vos besoins.</p>
+                    <a href="/contact" class="btn btn-secondary">Demander un devis</a>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-icon">🏠</div>
+                    <h3>Services</h3>
+                    <p>Découvrez tous nos services de ménage à domicile.</p>
+                    <a href="/" class="btn btn-secondary">Voir les services</a>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="card-icon">⚙️</div>
+                    <h3>Profil</h3>
+                    <p>Gérez vos informations personnelles.</p>
+                    <button class="btn btn-secondary" disabled>Bientôt disponible</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Message envoyé - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="confirmation-container">
+    <div class="container">
+        <div class="confirmation-card">
+            <div class="confirmation-icon">
+                {% if success %}
+                ✅
+                {% else %}
+                ❌
+                {% endif %}
+            </div>
+            
+            <h1>
+                {% if success %}
+                Message envoyé avec succès !
+                {% else %}
+                Erreur lors de l'envoi
+                {% endif %}
+            </h1>
+            
+            <p>
+                {% if success %}
+                {% if email_sent %}
+                Votre message a été envoyé et nous en avons bien reçu la notification. Nous vous répondrons dans les plus brefs délais.
+                {% else %}
+                Votre message a été enregistré mais nous n'avons pas pu recevoir la notification par email. Nous le traiterons dès que possible.
+                {% endif %}
+                {% else %}
+                Une erreur est survenue lors de l'envoi de votre message. Veuillez réessayer.
+                {% endif %}
+            </p>
+            
+            <div class="confirmation-actions">
+                <a href="/contact" class="btn btn-secondary">Envoyer un autre message</a>
+                <a href="/" class="btn btn-primary">Retour à l'accueil</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.confirmation-container {
+    padding: 4rem 0;
+    background-color: var(--light-gray);
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+}
+
+.confirmation-card {
+    background-color: var(--white);
+    padding: 3rem;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    text-align: center;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.confirmation-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+}
+
+.confirmation-card h1 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+    font-size: 2rem;
+}
+
+.confirmation-card p {
+    color: var(--dark-gray);
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .confirmation-card {
+        padding: 2rem;
+        margin: 0 1rem;
+    }
+    
+    .confirmation-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .confirmation-actions .btn {
+        width: 100%;
+        max-width: 250px;
+    }
+}
+</style>
+{% endblock %}

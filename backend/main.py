@@ -3,15 +3,34 @@ from pathlib import Path
 from dotenv import load_dotenv
 import resend
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
+
+# Import des routers
+from routers import public, auth, admin, messages, api, admin_management, auth_public
+
+# Import de la base de données
+from database import init_db
+from auth import get_user_from_token
 
 load_dotenv()
 
+# Initialisation de la base de données
+init_db()
+
 # Init FastAPI
-app = FastAPI(title="Formulaires de Contact")
+app = FastAPI(
+    title="RD Ménage à Domicile",
+    description="Services de ménage à domicile",
+    version="2.0"
+)
+
+# Configuration des templates
+templates = Jinja2Templates(directory="templates")
 
 # CORS config
 app.add_middleware(
@@ -30,11 +49,31 @@ class FormSubmission(BaseModel):
     email: EmailStr
     message: str
 
-# Resend config
+# Resend config (pour les emails)
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 RECIPIENT_EMAIL = os.getenv("RECIPIENT_EMAIL")
 
-resend.api_key = RESEND_API_KEY
+if RESEND_API_KEY:
+    resend.api_key = RESEND_API_KEY
+
+# Inclusion des routers
+app.include_router(public.router, tags=["public"])
+app.include_router(auth.router, tags=["auth"])
+app.include_router(admin.router, tags=["admin"])
+app.include_router(messages.router, tags=["messages"])
+app.include_router(api.router, tags=["api"])
+app.include_router(admin_management.router, tags=["admin_management"])
+app.include_router(auth_public.router, tags=["auth_public"])
+
+# Servir les fichiers statiques
+static_path = Path(__file__).parent / "static"
+if static_path.exists():
+    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
+# Servir le frontend pour compatibilité avec les appels API
+frontend_path = Path(__file__).parent.parent / "frontend"
+if frontend_path.exists():
+    app.mount("/", StaticFiles(directory=str(frontend_path), html=True), name="frontend")
 
 
 def send_email(subject: str, body: str, sender_email: str):
@@ -67,55 +106,40 @@ def send_email(subject: str, body: str, sender_email: str):
         return False
 
 
+# Page de contact existante (conservée pour compatibilité)
+@app.get("/contact", response_class=HTMLResponse)
+async def contact_page(request: Request):
+    """Page de contact (version existante)"""
+    user = get_user_from_token(request)
+    print(f"Utilisateur trouvé sur contact: {user}")
+    
+    # Utiliser le template du backend avec la logique de connexion
+    return templates.TemplateResponse("contact.html", {"request": request, "user": user})
+
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    """Health check pour Render"""
+    return {"status": "ok", "app": "RD Ménage à Domicile V2"}
 
+# Route par défaut
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    """Page d'accueil"""
+    print("=== PAGE D'ACCUEIL ===")
+    user = get_user_from_token(request)
+    print(f"Utilisateur trouvé: {user}")
+    
+    # Utiliser le template du backend avec la logique de connexion
+    return templates.TemplateResponse("index.html", {"request": request, "user": user})
 
-@app.post("/api/contact")
-def contact(data: FormSubmission):
-    """Reçoit et envoie un formulaire de contact"""
-    body = f"""
-Nouveau formulaire de contact:
+# Gestion des erreurs
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc):
+    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
 
-Nom: {data.nom} {data.prenom}
-Téléphone: {data.telephone}
-Email: {data.email}
-
-Message:
-{data.message}
-    """
-
-    if send_email(f"Nouveau contact - {data.nom} {data.prenom}", body, data.email):
-        return {"success": True, "message": "Formulaire envoyé avec succès!"}
-    else:
-        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi du email")
-
-
-@app.post("/api/quote")
-def quote(data: FormSubmission):
-    """Reçoit et envoie une demande de devis"""
-    body = f"""
-Nouvelle demande de devis:
-
-Nom: {data.nom} {data.prenom}
-Téléphone: {data.telephone}
-Email: {data.email}
-
-Description du projet:
-{data.message}
-    """
-
-    if send_email(f"Demande de devis - {data.nom} {data.prenom}", body, data.email):
-        return {"success": True, "message": "Demande de devis envoyée!"}
-    else:
-        raise HTTPException(status_code=500, detail="Erreur lors de l'envoi du devis")
-
-
-# Servir les fichiers statiques (frontend)
-public_path = Path(__file__).parent.parent / "frontend"
-if public_path.exists():
-    app.mount("/", StaticFiles(directory=str(public_path), html=True), name="static")
+@app.exception_handler(500)
+async def server_error_handler(request: Request, exc):
+    return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
 
 
 if __name__ == "__main__":

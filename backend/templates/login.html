@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Connexion - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-header">
+            <div class="auth-logo">
+                <img src="/static/logo.png" alt="RD Ménage" class="auth-logo-img">
+                <h2>RD Ménage</h2>
+            </div>
+            <h1>Connexion</h1>
+            <p>Accédez à votre espace personnel</p>
+        </div>
+        
+        {% if error %}
+        <div class="alert alert-error">
+            {{ error }}
+        </div>
+        {% endif %}
+        
+        <form method="post" action="/login" class="auth-form">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Mot de passe</label>
+                <input type="password" id="password" name="password" required class="form-control">
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-full">Se connecter</button>
+        </form>
+        
+        <div class="auth-footer">
+            <p>Pas encore de compte ? <a href="/register">S'inscrire</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %}

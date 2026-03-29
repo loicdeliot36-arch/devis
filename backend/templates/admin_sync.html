@@ -1,0 +1,299 @@
+{% extends "base.html" %}
+
+{% block title %}Synchronisation Emails - Administration{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="container">
+        <div class="admin-header">
+            <h1>Synchronisation des Emails</h1>
+            <p>Détectez et synchronisez les réponses par email</p>
+        </div>
+        
+        <div class="sync-card">
+            <div class="sync-info">
+                <h2>Synchronisation automatique</h2>
+                <p>Ce système détecte les réponses que vous envoyez depuis votre boîte mail et les ajoute automatiquement au site.</p>
+                
+                <div class="sync-features">
+                    <div class="feature">
+                        <span class="feature-icon">Email</span>
+                        <div>
+                            <h3>Détection automatique</h3>
+                            <p>Scanne votre boîte mail toutes les 5 minutes</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature">
+                        <span class="feature-icon">Sync</span>
+                        <div>
+                            <h3>Synchronisation</h3>
+                            <p>Ajoute les réponses dans la base de données</p>
+                        </div>
+                    </div>
+                    
+                    <div class="feature">
+                        <span class="feature-icon">Check</span>
+                        <div>
+                            <h3>Marquage automatique</h3>
+                            <p>Les messages sont marqués comme "Traité"</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="sync-actions">
+                <div class="action-group">
+                    <h3>Démarrer la synchronisation</h3>
+                    <p>Lancez le service de synchronisation en arrière-plan :</p>
+                    <div class="code-block">
+                        <code>python sync_emails.py</code>
+                    </div>
+                </div>
+                
+                <div class="action-group">
+                    <h3>Synchronisation manuelle</h3>
+                    <p>Testez la synchronisation maintenant :</p>
+                    <form method="post" action="/admin/sync/manual">
+                        <button type="submit" class="btn btn-primary">
+                            <span>Lancer la synchronisation</span>
+                        </button>
+                    </form>
+                </div>
+                
+                <div class="action-group">
+                    <h3>Statut du service</h3>
+                    <div class="status-info">
+                        <div class="status-item">
+                            <span class="status-label">Service actif :</span>
+                            <span class="status-value {% if sync_status == 'active' %}status-active{% else %}status-inactive{% endif %}">
+                                {{ sync_status or 'Inactif' }}
+                            </span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Dernière sync :</span>
+                            <span class="status-value">{{ last_sync or 'Jamais' }}</span>
+                        </div>
+                        <div class="status-item">
+                            <span class="status-label">Emails synchronisés :</span>
+                            <span class="status-value">{{ synced_count or '0' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sync-help">
+            <h2>Comment ça marche ?</h2>
+            <div class="help-steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <div class="step-content">
+                        <h3>Vous recevez un email</h3>
+                        <p>Un client envoie un message via le formulaire</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <div class="step-content">
+                        <h3>Vous répondez par email</h3>
+                        <p>Répondez directement depuis votre boîte mail Gmail</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <div class="step-content">
+                        <h3>Détection automatique</h3>
+                        <p>Le système détecte votre réponse</p>
+                    </div>
+                </div>
+                
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <div class="step-content">
+                        <h3>Synchronisation</h3>
+                        <p>La réponse est ajoutée au site et le message marqué "Traité"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="sync-navigation">
+            <a href="/admin/messages" class="btn btn-secondary">← Retour aux messages</a>
+            <a href="/admin" class="btn btn-secondary">Tableau de bord</a>
+        </div>
+    </div>
+</div>
+
+<style>
+.sync-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.sync-info h2 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.sync-features {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.feature-icon {
+    font-size: 2rem;
+    flex-shrink: 0;
+}
+
+.feature h3 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.feature p {
+    color: var(--dark-gray);
+    margin: 0;
+}
+
+.sync-actions {
+    margin-top: 2rem;
+}
+
+.action-group {
+    background-color: var(--light-gray);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.action-group h3 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.code-block {
+    background-color: #2d3748;
+    color: #e2e8f0;
+    padding: 1rem;
+    border-radius: 6px;
+    font-family: 'Courier New', monospace;
+    margin: 1rem 0;
+}
+
+.status-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e1e5e9;
+}
+
+.status-label {
+    font-weight: 500;
+    color: var(--dark-gray);
+}
+
+.status-value {
+    font-weight: 600;
+}
+
+.status-active {
+    color: #28a745;
+}
+
+.status-inactive {
+    color: #dc3545;
+}
+
+.sync-help {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+.sync-help h2 {
+    color: var(--primary-blue);
+    margin-bottom: 2rem;
+}
+
+.help-steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+}
+
+.step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+}
+
+.step-number {
+    background-color: var(--primary-blue);
+    color: white;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.step-content h3 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.step-content p {
+    color: var(--dark-gray);
+    margin: 0;
+}
+
+.sync-navigation {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .sync-features {
+        grid-template-columns: 1fr;
+    }
+    
+    .help-steps {
+        grid-template-columns: 1fr;
+    }
+    
+    .sync-navigation {
+        flex-direction: column;
+        align-items: center;
+    }
+}
+</style>
+{% endblock %}

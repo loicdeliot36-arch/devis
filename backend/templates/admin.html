@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Espace Admin - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="container">
+        <div class="admin-header">
+            <h1>Espace Administration</h1>
+            <p>Gestion des messages de contact</p>
+        </div>
+        
+        <div class="admin-stats">
+            <div class="stat-card">
+                <div class="stat-number">{{ contacts|length }}</div>
+                <div class="stat-label">Messages total</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ contacts|selectattr('traite', 'equalto', 0)|list|length }}</div>
+                <div class="stat-label">Non traités</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">{{ contacts|selectattr('traite', 'equalto', 1)|list|length }}</div>
+                <div class="stat-label">Traités</div>
+            </div>
+        </div>
+        
+        <div class="contacts-section">
+            <h2>Messages de contact</h2>
+            
+            {% if contacts %}
+            <div class="contacts-table-container">
+                <table class="contacts-table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Nom</th>
+                            <th>Email</th>
+                            <th>Téléphone</th>
+                            <th>Message</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for contact in contacts %}
+                        <tr class="{% if not contact.traite %}unprocessed{% endif %}">
+                            <td>{{ contact.date[:10] }}</td>
+                            <td>{{ contact.nom }}</td>
+                            <td>{{ contact.email }}</td>
+                            <td>{{ contact.telephone or '-' }}</td>
+                            <td class="message-cell">
+                                <div class="message-preview">
+                                    {{ contact.message[:100] }}{% if contact.message|length > 100 %}...{% endif %}
+                                </div>
+                            </td>
+                            <td>
+                                {% if contact.traite %}
+                                    <span class="status-badge status-treated">Traité</span>
+                                {% else %}
+                                    <span class="status-badge status-pending">En attente</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="action-buttons">
+                                    {% if not contact.traite %}
+                                    <form method="post" action="/admin/mark-treated/{{ contact.id }}" style="display: inline;">
+                                        <button type="submit" class="btn btn-sm btn-success" title="Marquer comme traité">
+                                            ✓
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    <form method="post" action="/admin/delete/{{ contact.id }}" style="display: inline;" 
+                                          onsubmit="return confirm('Supprimer ce message ?')">
+                                        <button type="submit" class="btn btn-sm btn-danger" title="Supprimer">
+                                            🗑
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h3>Aucun message</h3>
+                <p>Vous n'avez reçu aucun message pour le moment.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Confirmation pour les suppressions
+document.querySelectorAll('form[action*="/delete/"]').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        if (!confirm('Êtes-vous sûr de vouloir supprimer ce message ?')) {
+            e.preventDefault();
+        }
+    });
+});
+
+// Animation pour les nouveaux messages
+document.addEventListener('DOMContentLoaded', function() {
+    const unprocessedRows = document.querySelectorAll('.unprocessed');
+    unprocessedRows.forEach(row => {
+        row.style.animation = 'pulse 2s infinite';
+    });
+});
+</script>
+
+<style>
+@keyframes pulse {
+    0% { background-color: rgba(42, 77, 143, 0.1); }
+    50% { background-color: rgba(42, 77, 143, 0.2); }
+    100% { background-color: rgba(42, 77, 143, 0.1); }
+}
+</style>
+{% endblock %}

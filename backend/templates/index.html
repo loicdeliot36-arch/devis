@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}RD Ménage à Domicile - Services de ménage professionnel{% endblock %}
+
+{% block content %}
+{% if user %}
+<div class="welcome-banner">
+    <div class="container">
+        <p>👋 Bonjour {{ user.email.split('@')[0] }}, vous êtes connecté !</p>
+    </div>
+</div>
+{% endif %}
+<div class="hero">
+    <div class="container">
+        <div class="hero-content">
+            <h1 class="hero-title">Offrez-vous un intérieur impeccable avec nos services de ménage à domicile</h1>
+            <p class="hero-subtitle">Expert en ménage à domicile</p>
+            <p class="hero-description">Un intérieur propre, sain et agréable au quotidien.</p>
+            
+            <div class="tax-highlight">
+                <div class="tax-circle">
+                    <span class="tax-text">50% de réduction d'impôt</span>
+                    <span class="tax-small">(article 199 du Code Général des Impôts)</span>
+                </div>
+            </div>
+            
+            <div class="hero-buttons">
+                <a href="/contact" class="btn btn-primary btn-large">Demander un devis</a>
+                <a href="#services" class="btn btn-secondary btn-large">Nos services</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<section id="services" class="services">
+    <div class="container">
+        <h2 class="section-title">Mes prestations</h2>
+        <div class="services-grid">
+            <div class="service-card">
+                <div class="service-icon">🏠</div>
+                <h3>Entretien complet de la maison</h3>
+                <p>Nettoyage en profondeur de toutes les pièces de votre domicile.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">📋</div>
+                <h3>Nettoyage de printemps ou après travaux</h3>
+                <p>Intervention complète pour retrouver une maison neuve et saine.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">🔥</div>
+                <h3>Repassage et entretien du linge</h3>
+                <p>Service de repassage professionnel et entretien textile.</p>
+            </div>
+            <div class="service-card">
+                <div class="service-icon">👥</div>
+                <h3>Aide à domicile pour personnes âgées</h3>
+                <p>Accompagnement et aide ménagère pour les seniors.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="why-choose">
+    <div class="container">
+        <h2 class="section-title">Pourquoi choisir RD Ménage ?</h2>
+        <div class="features-grid">
+            <div class="feature-item">
+                <div class="feature-icon">✓</div>
+                <div class="feature-content">
+                    <h3>Intervenant de confiance et discret</h3>
+                    <p>Professionnel formé et fiable pour votre tranquillité d'esprit.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✓</div>
+                <div class="feature-content">
+                    <h3>Prestations sur mesure</h3>
+                    <p>Solutions adaptées selon vos besoins spécifiques.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✓</div>
+                <div class="feature-content">
+                    <h3>Horaires flexibles</h3>
+                    <p>Intervention de 8h à 20h, du lundi au vendredi.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✓</div>
+                <div class="feature-content">
+                    <h3>Intervention rapide et soignée</h3>
+                    <p>Réactivité et qualité garantie à chaque intervention.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✓</div>
+                <div class="feature-content">
+                    <h3>Entreprise agréée service à la personne</h3>
+                    <p>Prestations éligibles aux avantages fiscaux.</p>
+                </div>
+            </div>
+            <div class="feature-item">
+                <div class="feature-icon">✓</div>
+                <div class="feature-content">
+                    <h3>Devis gratuit et personnalisé</h3>
+                    <p>Étude personnalisée de vos besoins sans engagement.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="container">
+        <div class="cta-content">
+            <h2>Prêt à profiter d'un intérieur impeccable ?</h2>
+            <p>Contactez-nous dès maintenant pour votre devis gratuit</p>
+            <a href="/contact" class="btn btn-primary btn-large">Demander un devis gratuit</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

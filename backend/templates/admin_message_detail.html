@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block title %}Message - Administration{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="container">
+        <div class="admin-header">
+            <a href="/admin/messages" class="btn btn-secondary">← Retour aux messages</a>
+            <h1>Détail du message</h1>
+        </div>
+        
+        <div class="message-detail">
+            <div class="message-card">
+                <div class="message-header">
+                    <div class="message-info">
+                        <h2>{{ message.nom }}</h2>
+                        <div class="message-meta">
+                            <span class="meta-item">📧 {{ message.email }}</span>
+                            {% if message.telephone %}
+                            <span class="meta-item">📞 {{ message.telephone }}</span>
+                            {% endif %}
+                            <span class="meta-item">📅 {{ message.date_creation[:10] }}</span>
+                        </div>
+                    </div>
+                    <div class="message-status">
+                        <span class="status-badge {% if message.statut == 'traite' %}status-treated{% else %}status-pending{% endif %}">
+                            {% if message.statut == 'traite' %}Traité{% else %}En attente{% endif %}
+                        </span>
+                    </div>
+                </div>
+                
+                <div class="message-content">
+                    <h3>Message du client</h3>
+                    <div class="message-text">
+                        {{ message.message | replace('\n', '<br>') | safe }}
+                    </div>
+                </div>
+                
+                {% if message.reponse_admin %}
+                <div class="response-section">
+                    <h3>Votre réponse</h3>
+                    <div class="response-text">
+                        {{ message.reponse_admin | replace('\n', '<br>') | safe }}
+                    </div>
+                    <div class="response-date">
+                        Envoyée le {{ message.date_reponse[:10] }}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if message.statut != 'traite' %}
+            <div class="response-form">
+                <div class="form-card">
+                    <h2>Répondre au message</h2>
+                    
+                    {% if error %}
+                    <div class="alert alert-error">
+                        {{ error }}
+                    </div>
+                    {% endif %}
+                    
+                    <form method="post" action="/admin/messages/{{ message.id }}/respond">
+                        <div class="form-group">
+                            <label for="reponse">Votre réponse</label>
+                            <textarea id="reponse" name="reponse" required rows="8" 
+                                placeholder="Rédigez votre réponse ici..."></textarea>
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <span>📤 Envoyer la réponse</span>
+                            </button>
+                            <a href="/admin/messages" class="btn btn-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+.admin-container {
+    padding: 2rem 0;
+}
+
+.admin-header {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.admin-header h1 {
+    color: var(--primary-blue);
+    margin: 0;
+}
+
+.message-detail {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.message-card {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+}
+
+.message-header {
+    padding: 2rem;
+    background-color: var(--light-gray);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.message-info h2 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.message-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.meta-item {
+    color: var(--dark-gray);
+    font-size: 0.9rem;
+}
+
+.message-status {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-treated {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.message-content {
+    padding: 2rem;
+}
+
+.message-content h3 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.message-text {
+    background-color: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid var(--primary-blue);
+    line-height: 1.6;
+}
+
+.response-section {
+    padding: 2rem;
+    background-color: #e8f5e8;
+    border-top: 1px solid #d4edda;
+}
+
+.response-section h3 {
+    color: #155724;
+    margin-bottom: 1rem;
+}
+
+.response-text {
+    background-color: #d4edda;
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 4px solid #155724;
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.response-date {
+    color: #155724;
+    font-size: 0.9rem;
+    font-style: italic;
+}
+
+.response-form {
+    background-color: var(--white);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+}
+
+.form-card {
+    padding: 2rem;
+}
+
+.form-card h2 {
+    color: var(--primary-blue);
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.form-group {
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    color: var(--dark-gray);
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.form-group textarea {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e1e5e9;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: inherit;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.form-group textarea:focus {
+    outline: none;
+    border-color: var(--primary-blue);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-error {
+    background-color: #fee;
+    border: 1px solid #fcc;
+    color: #c33;
+}
+
+@media (max-width: 768px) {
+    .admin-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+    
+    .message-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .message-meta {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+{% endblock %}
