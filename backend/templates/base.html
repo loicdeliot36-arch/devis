@@ -110,16 +110,52 @@
         // Menu mobile toggle
         function toggleMobileMenu() {
             const navMenu = document.getElementById('navMenu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
             navMenu.classList.toggle('active');
+            toggle.classList.toggle('active');
+            
+            // Empêcher le scroll du corps quand le menu est ouvert
+            if (navMenu.classList.contains('active')) {
+                document.body.style.overflow = 'hidden';
+            } else {
+                document.body.style.overflow = '';
+            }
         }
+        
+        // Fermer le menu mobile
+        function closeMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            navMenu.classList.remove('active');
+            toggle.classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        // Fermer le menu mobile au clic sur le fond
+        document.addEventListener('click', function(e) {
+            const navMenu = document.getElementById('navMenu');
+            const toggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (!navMenu.contains(e.target) && !toggle.contains(e.target)) {
+                closeMobileMenu();
+            }
+        });
+        
+        // Fermer le menu mobile à la touche Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeMobileMenu();
+            }
+        });
         
         // Fermer le menu mobile quand on clique sur un lien
         document.addEventListener('DOMContentLoaded', function() {
             const navLinks = document.querySelectorAll('.nav-link');
             navLinks.forEach(link => {
                 link.addEventListener('click', () => {
-                    const navMenu = document.getElementById('navMenu');
-                    navMenu.classList.remove('active');
+                    setTimeout(closeMobileMenu, 100); // Petit délai pour la navigation
                 });
             });
         });
