@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RD Ménage à Domicile{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style_v3.css">
+    <link rel="icon" href="/static/logo.png" type="image/png">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <img src="/static/logo.png" alt="RD Ménage" class="logo-img">
+                    <div class="logo-text">
+                        <h1>RD MÉNAGE</h1>
+                        <p>Services Professionnels</p>
+                    </div>
+                </div>
+                
+                <nav class="main-nav">
+                    <div class="nav-brand">
+                        <img src="/static/logo.png" alt="RD" class="nav-logo">
+                    </div>
+                    
+                    <div class="nav-menu">
+                        <a href="/" class="nav-link">Accueil</a>
+                        <a href="/contact" class="nav-link">Contact</a>
+                        
+                        {% if user %}
+                            <div class="user-dropdown">
+                                <button class="user-btn">
+                                    <div class="user-avatar">
+                                        <span>{{ user.prenom[0]|upper if user.prenom else 'U' }}{{ user.nom[0]|upper if user.nom else 'U' }}</span>
+                                    </div>
+                                    <span class="user-name">{{ user.prenom }} {{ user.nom }}</span>
+                                    {% if user.role == 'admin' %}
+                                        <span class="user-badge">Admin</span>
+                                    {% endif %}
+                                    <svg class="dropdown-arrow" width="12" height="8" viewBox="0 0 12 8">
+                                        <path d="M1 1l5 5 5-5" stroke="currentColor" stroke-width="2" fill="none"/>
+                                    </svg>
+                                </button>
+                                
+                                <div class="dropdown-menu">
+                                    <a href="/dashboard" class="dropdown-item">
+                                        <svg width="16" height="16" viewBox="0 0 16 16">
+                                            <path d="M8 8a3 3 0 100-6 3 3 0 000 6zm0 1c-2.5 0-4.5 1.5-4.5 3v1h9v-1c0-1.5-2-3-4.5-3z" fill="currentColor"/>
+                                        </svg>
+                                        Mon espace
+                                    </a>
+                                    {% if user.role == 'admin' %}
+                                        <a href="/admin/messages" class="dropdown-item">
+                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                                <path d="M2 2h12v12H2V2zm1 1v10h10V3H3z" fill="currentColor"/>
+                                            </svg>
+                                            Messages
+                                        </a>
+                                        <a href="/admin/users" class="dropdown-item">
+                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                                <path d="M8 8a3 3 0 100-6 3 3 0 000 6zm0 1c-2.5 0-4.5 1.5-4.5 3v1h9v-1c0-1.5-2-3-4.5-3z" fill="currentColor"/>
+                                            </svg>
+                                            Utilisateurs
+                                        </a>
+                                        <a href="/admin/sync" class="dropdown-item">
+                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                                <path d="M8 3a5 5 0 100 10 5 5 0 000-10zm0 1a4 4 0 110 8 4 4 0 010-8z" fill="currentColor"/>
+                                            </svg>
+                                            Synchronisation
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <a href="/logout" class="dropdown-item logout">
+                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                                <path d="M2 1h6v2H2v10h6v2H2a1 1 0 01-1-1V2a1 1 0 011-1zm7 4l3 3-3 3v-2h5V7H9V5z" fill="currentColor"/>
+                                            </svg>
+                                            Déconnexion
+                                        </a>
+                                    {% else %}
+                                        <div class="dropdown-divider"></div>
+                                        <a href="/logout" class="dropdown-item logout">
+                                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                                <path d="M2 1h6v2H2v10h6v2H2a1 1 0 01-1-1V2a1 1 0 011-1zm7 4l3 3-3 3v-2h5V7H9V5z" fill="currentColor"/>
+                                            </svg>
+                                            Déconnexion
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% else %}
+                            <div class="auth-buttons">
+                                <a href="/login" class="btn btn-outline">Connexion</a>
+                                <a href="/register" class="btn btn-primary">Inscription</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <button class="mobile-menu-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="/static/logo.png" alt="RD Ménage">
+                        <h3>RD Ménage à Domicile</h3>
+                    </div>
+                    <p>Services de ménage professionnels et fiables pour votre maison ou votre entreprise.</p>
+                    <div class="footer-social">
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 20 20">
+                                <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3V2z" fill="currentColor"/>
+                            </svg>
+                        </a>
+                        <a href="#" class="social-link">
+                            <svg width="20" height="20" viewBox="0 0 20 20">
+                                <path d="M20 3.8c-.7.3-1.5.5-2.4.6.9-.5 1.5-1.3 1.8-2.3-.8.5-1.7.8-2.7 1-.8-.8-1.9-1.3-3.1-1.3-2.3 0-4.2 1.9-4.2 4.2 0 .3 0 .6.1.9-3.5-.2-6.6-1.9-8.7-4.5-.4.6-.6 1.3-.6 2.1 0 1.5.7 2.8 1.8 3.5-.7 0-1.3-.2-1.8-.5v.1c0 2 1.4 3.6 3.3 4-.3.1-.7.1-1.1.1-.3 0-.5 0-.8-.1.5 1.6 2 2.8 3.8 2.8-1.4 1.1-3.2 1.8-5.1 1.8-.3 0-.7 0-1-.1 1.9 1.2 4.1 1.9 6.5 1.9 7.8 0 12.1-6.5 12.1-12.1 0-.2 0-.4 0-.5.8-.6 1.5-1.3 2.1-2.2z" fill="currentColor"/>
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Services</h4>
+                    <ul>
+                        <li><a href="#">Ménage régulier</a></li>
+                        <li><a href="#">Grand nettoyage</a></li>
+                        <li><a href="#">Nettoyage de fin de chantier</a></li>
+                        <li><a href="#">Nettoyage de bureaux</a></li>
+                        <li><a href="#">Services après événement</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Entreprise</h4>
+                    <ul>
+                        <li><a href="#">À propos</a></li>
+                        <li><a href="#">Notre équipe</a></li>
+                        <li><a href="#">Témoignages</a></li>
+                        <li><a href="#">Carrières</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact</h4>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                <path d="M0 2a2 2 0 012-2h12a2 2 0 012 2v12a2 2 0 01-2 2H2a2 2 0 01-2-2V2zm2 1v10h12V3H2z" fill="currentColor"/>
+                            </svg>
+                            <span>contact@rdmenage.fr</span>
+                        </div>
+                        <div class="contact-item">
+                            <svg width="16" height="16" viewBox="0 0 16 16">
+                                <path d="M1 2.5A1.5 1.5 0 012.5 1h3A1.5 1.5 0 017 2.5v3A1.5 1.5 0 015.5 7h-3A1.5 1.5 0 011 5.5v-3zm8 0A1.5 1.5 0 0110.5 1h3A1.5 1.5 0 0115 2.5v3A1.5 1.5 0 0113.5 7h-3A1.5 1.5 0 019 5.5v-3zm-8 8A1.5 1.5 0 012.5 9h3A1.5 1.5 0 017 10.5v3A1.5 1.5 0 015.5 15h-3A1.5 1.5 0 011 13.5v-3zm8 0A1.5 1.5 0 0110.5 9h3a1.5 1.5 0 011.5 1.5v3a1.5 1.5 0 01-1.5 1.5h-3A1.5 1.5 0 019 13.5v-3z" fill="currentColor"/>
+                            </svg>
+                            <span>France</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p>&copy; 2026 RD Ménage à Domicile. Tous droits réservés.</p>
+                    <div class="footer-links">
+                        <a href="#">Mentions légales</a>
+                        <a href="#">Politique de confidentialité</a>
+                        <a href="#">CGV</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Dropdown menu
+        document.querySelector('.user-btn')?.addEventListener('click', function() {
+            this.parentElement.classList.toggle('active');
+        });
+
+        // Mobile menu
+        document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
+            document.querySelector('.main-nav').classList.toggle('mobile-active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.user-dropdown')) {
+                document.querySelector('.user-dropdown')?.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

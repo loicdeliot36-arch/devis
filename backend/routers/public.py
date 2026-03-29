@@ -16,12 +16,26 @@ templates = Jinja2Templates(directory="templates")
 @router.get("/", response_class=HTMLResponse)
 async def home(request: Request):
     """Page d'accueil"""
-    return templates.TemplateResponse("index.html", {"request": request})
+    # Récupérer l'utilisateur connecté
+    from auth import get_user_from_token
+    user = get_user_from_token(request)
+    
+    return templates.TemplateResponse("index.html", {
+        "request": request,
+        "user": user
+    })
 
 @router.get("/contact", response_class=HTMLResponse)
 async def contact_page(request: Request):
     """Page de contact (existe déjà)"""
-    return templates.TemplateResponse("contact.html", {"request": request})
+    # Récupérer l'utilisateur connecté
+    from auth import get_user_from_token
+    user = get_user_from_token(request)
+    
+    return templates.TemplateResponse("contact.html", {
+        "request": request,
+        "user": user
+    })
 
 @router.post("/api/contact")
 async def contact_form(

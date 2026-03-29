@@ -90,16 +90,16 @@ class EmailSync:
         return client_name, client_email
     
     def find_original_message(self, client_email, client_name):
-        """Trouver le message original dans la base de données"""
+        """Trouver le message original non traité dans la base de données"""
         try:
             db_path = Path(__file__).parent / "database.db"
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
             
-            # Chercher par email ou nom
+            # Chercher le message le plus récent NON TRAITE pour ce client
             cursor.execute('''
                 SELECT id FROM contact_messages 
-                WHERE email = ? OR nom LIKE ?
+                WHERE (email = ? OR nom LIKE ?) AND statut != 'traite'
                 ORDER BY date_creation DESC
                 LIMIT 1
             ''', (client_email, f"%{client_name}%"))
@@ -107,7 +107,27 @@ class EmailSync:
             result = cursor.fetchone()
             conn.close()
             
-            return result[0] if result else None
+            if result:
+                return result[0]
+            else:
+                # Si aucun message non traité, chercher le plus récent (même traité)
+                conn = sqlite3.connect(db_path)
+                cursor = conn.cursor()
+                cursor.execute('''
+                    SELECT id FROM contact_messages 
+                    WHERE email = ? OR nom LIKE ?
+                    ORDER BY date_creation DESC
+                    LIMIT 1
+                ''', (client_email, f"%{client_name}%"))
+                
+                result = cursor.fetchone()
+                conn.close()
+                
+                if result:
+                    print(f"Aucun message non traité trouvé pour {client_email}, utilisation du plus récent: #{result[0]}")
+                    return result[0]
+                else:
+                    return None
             
         except Exception as e:
             print(f"Erreur recherche message original: {e}")
@@ -129,7 +149,7 @@ class EmailSync:
             conn.commit()
             conn.close()
             
-            print(f"✅ Réponse synchronisée pour le message #{message_id}")
+            print(f"Réponse synchronisée pour le message #{message_id}")
             return True
             
         except Exception as e:
@@ -138,7 +158,7 @@ class EmailSync:
     
     def check_responses(self):
         """Vérifier les réponses par email et les synchroniser"""
-        print("🔍 Vérification des réponses par email...")
+        print("Verification des reponses par email...")
         
         mail = self.connect_to_imap()
         if not mail:
@@ -156,7 +176,7 @@ class EmailSync:
                 status, messages = mail.search(None, search_criteria)
                 
                 if status != 'OK' or not messages[0]:
-                    print("📭 Aucun email trouvé de votre part dans Messages envoyés")
+                    print("Aucun email trouvé de votre part dans Messages envoyés")
                     # Chercher dans la boîte de réception aussi
                     mail.select('inbox')
                     search_criteria = 'FROM "nathantechniquerd@gmail.com"'
@@ -168,21 +188,21 @@ class EmailSync:
                 status, messages = mail.search(None, search_criteria)
             
             if status != 'OK' or not messages[0]:
-                print("📭 Aucun email trouvé, recherche de tous les emails")
+                print("Aucun email trouvé, recherche de tous les emails")
                 search_criteria = 'ALL'
                 status, messages = mail.search(None, search_criteria)
             
             if status != 'OK' or not messages[0]:
-                print("📭 Aucun email trouvé")
+                print("Aucun email trouvé")
                 return True
             
             email_ids = messages[0].split()
-            print(f"📧 {len(email_ids)} emails trouvés au total")
+            print(f"{len(email_ids)} emails trouvés au total")
             
             # Limiter aux 50 derniers emails pour analyse (les plus récents)
             # Les emails sont triés du plus ancien au plus récent, donc on prend les 50 premiers de la fin
-            recent_ids = email_ids[-50:] if len(email_ids) > 50 else email_ids
-            print(f"📧 Analyse des {len(recent_ids)} emails les plus récents")
+            recent_ids = email_ids[-50:]
+            print(f"Analyse des {len(recent_ids)} emails les plus récents")
             
             synced_count = 0
             
@@ -222,53 +242,61 @@ class EmailSync:
                         except:
                             body = str(msg.get_payload())
                     
-                    print(f"📧 Email analysé: {subject[:50]}...")
-                    print(f"📧 De: {from_email}")
+                    print(f"Email analysé: {subject[:50]}...")
+                    print(f"De: {from_email}")
                     
                     # Extraire les infos du client
                     client_name, client_email = self.extract_client_info(subject, body, from_email)
                     
-                    # Vérifier le type d'email
-                    is_rd_menage = "RD MENAGE" in subject
-                    is_from_you = "nathantechniquerd@gmail.com" in from_email
-                    
-                    # Extraire les infos du client pour les emails de vous (réponses)
-                    if is_from_you and not is_rd_menage:
-                        # Pour les réponses, chercher l'email du destinataire dans les headers
-                        to_email = msg.get('To', '')
+                    # Si c'est une réponse envoyée par vous, extraire le destinataire
+                    if "nathantechniquerd@gmail.com" in from_email:
+                        # C'est une réponse que vous avez envoyée
+                        to_emails = msg.get('To', '').split(',')
+                        cc_emails = msg.get('Cc', '').split(',') if msg.get('Cc') else []
+                        
+                        # Chercher l'email du client dans les destinataires
+                        for email_addr in to_emails + cc_emails:
+                            if email_addr and 'gmail.com' not in email_addr and 'googlemail.com' not in email_addr:
+                                to_email = email_addr.strip()
+                                break
+                        
+                        # Nettoyer l'email
                         if '<' in to_email and '>' in to_email:
                             to_email = to_email.split('<')[1].split('>')[0]
                         
-                        print(f"📧 Destinataire de votre réponse: {to_email}")
+                        print(f"Destinataire de votre réponse: {to_email}")
                         
                         # Utiliser le destinataire comme email client
                         if to_email and '@' in to_email:
                             client_email = to_email
                             client_name = client_email.split('@')[0].replace('.', ' ').title()
-                            print(f"📧 Client extrait depuis destinataire: {client_name} - {client_email}")
+                            print(f"Client extrait depuis destinataire: {client_name} - {client_email}")
                         else:
-                            print(f"⚠️ Impossible de trouver le destinataire")
+                            print("Impossible de trouver le destinataire")
                             continue
                     
                     # Afficher les infos trouvées
-                    print(f"📧 Sujet: {subject}")
-                    print(f"📧 De: {from_email}")
-                    print(f"📧 Client trouvé: {client_name} - {client_email}")
+                    print(f"Sujet: {subject}")
+                    print(f"De: {from_email}")
+                    print(f"Client trouvé: {client_name} - {client_email}")
                     
                     if not client_email:
-                        print(f"⚠️ Email client non trouvé, email suivant...")
+                        print("Email client non trouvé, email suivant...")
                         continue
                     
                     # Chercher seulement les emails qui contiennent "RD MENAGE" OU les emails récents de vous
+                    is_rd_menage = "RD MENAGE" in subject
+                    is_from_you = "nathantechniquerd@gmail.com" in from_email
+                    
                     if not is_rd_menage and not is_from_you:
-                        print(f"⚠️ Pas un email RD MENAGE ou de votre part, email suivant...")
+                        print(f"Pas un email RD MENAGE ou de votre part, email suivant...")
                         continue
                     
                     # Trouver le message original
                     original_message_id = self.find_original_message(client_email, client_name)
                     
                     if not original_message_id:
-                        print(f"⚠️ Message original non trouvé pour: {client_email}")
+                        print(f"Message original non trouvé pour: {client_email}")
                         continue
                     
                     # Sauvegarder la réponse
@@ -279,10 +307,10 @@ class EmailSync:
                         mail.store(email_id, '+FLAGS', '\\Seen')
                 
                 except Exception as e:
-                    print(f"⚠️ Erreur traitement email {email_id}: {e}")
+                    print(f"Erreur traitement email {email_id}: {e}")
                     continue
             
-            print(f"✅ {synced_count} réponses synchronisées")
+            print(f"{synced_count} réponses synchronisées")
             return True
             
         except Exception as e:

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}RD Ménage Professionnel{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style_pro.css">
+    <link rel="icon" href="/static/logo.png" type="image/png">
+</head>
+<body>
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <a href="/" class="logo">
+                    <img src="/static/logo.png" alt="RD Ménage" class="logo-img">
+                    <span>RD Ménage</span>
+                </a>
+                
+                <nav class="nav">
+                    <a href="/" class="nav-link">Accueil</a>
+                    <a href="/contact" class="nav-link">Contact</a>
+                    
+                    {% if user %}
+                        <div class="user-dropdown">
+                            <button class="user-btn" onclick="toggleDropdown(this)">
+                                <div class="user-avatar">
+                                    <span>{{ user.prenom[0]|upper if user.prenom else 'U' }}{{ user.nom[0]|upper if user.nom else 'U' }}</span>
+                                </div>
+                                <span class="user-name">{{ user.prenom }} {{ user.nom }}</span>
+                                {% if user.role == 'admin' %}
+                                    <span class="user-badge">Admin</span>
+                                {% endif %}
+                                <svg class="dropdown-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                            
+                            <div class="dropdown-menu">
+                                <a href="/dashboard" class="dropdown-item">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke-width="2"/>
+                                        <circle cx="12" cy="7" r="4" stroke-width="2"/>
+                                    </svg>
+                                    Mon espace
+                                </a>
+                                
+                                {% if user.role == 'admin' %}
+                                    <a href="/admin/messages" class="dropdown-item">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke-width="2"/>
+                                            <polyline points="22,6 12,13 2,6" stroke-width="2"/>
+                                        </svg>
+                                        Messages
+                                    </a>
+                                    <a href="/admin/users" class="dropdown-item">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" stroke-width="2"/>
+                                            <circle cx="9" cy="7" r="4" stroke-width="2"/>
+                                            <path d="M23 21v-2a4 4 0 0 0-3-3.87" stroke-width="2"/>
+                                            <path d="M16 3.13a4 4 0 0 1 0 7.75" stroke-width="2"/>
+                                        </svg>
+                                        Utilisateurs
+                                    </a>
+                                    <a href="/admin/sync" class="dropdown-item">
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <polyline points="23 4 23 10 17 10" stroke-width="2"/>
+                                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" stroke-width="2"/>
+                                        </svg>
+                                        Synchronisation
+                                    </a>
+                                    <div class="dropdown-divider"></div>
+                                {% endif %}
+                                
+                                <a href="/logout" class="dropdown-item logout">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" stroke-width="2"/>
+                                        <polyline points="16 17 21 12 16 7" stroke-width="2"/>
+                                        <line x1="21" y1="12" x2="9" y2="12" stroke-width="2"/>
+                                    </svg>
+                                    Déconnexion
+                                </a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="auth-buttons">
+                            <a href="/login" class="btn btn-outline">Connexion</a>
+                            <a href="/register" class="btn btn-primary">Inscription</a>
+                        </div>
+                    {% endif %}
+                    
+                    <button class="mobile-menu-toggle">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="main">
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <img src="/static/logo.png" alt="RD Ménage">
+                        <h3>RD Ménage Professionnel</h3>
+                    </div>
+                    <p>Services de ménage haut de gamme pour professionnels et particuliers. Excellence et fiabilité depuis 2026.</p>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Services Premium</h4>
+                    <ul>
+                        <li><a href="#">Ménage sur mesure</a></li>
+                        <li><a href="#">Nettoyage industriel</a></li>
+                        <li><a href="#">Maintenance préventive</a></li>
+                        <li><a href="#">Services après événement</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Entreprise</h4>
+                    <ul>
+                        <li><a href="#">Notre expertise</a></li>
+                        <li><a href="#">Équipe certifiée</a></li>
+                        <li><a href="#">Références clients</a></li>
+                        <li><a href="#">Partenariats</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-section">
+                    <h4>Contact Premium</h4>
+                    <ul>
+                        <li><a href="#">contact@rdmenage-pro.fr</a></li>
+                        <li><a href="#">01 23 45 67 89</a></li>
+                        <li><a href="#">Paris, France</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <p>&copy; 2026 RD Ménage Professionnel. Tous droits réservés. | Service Premium</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function toggleDropdown(button) {
+            const dropdown = button.parentElement;
+            const wasActive = dropdown.classList.contains('active');
+            
+            // Close all dropdowns
+            document.querySelectorAll('.user-dropdown').forEach(d => {
+                d.classList.remove('active');
+            });
+            
+            // Toggle current dropdown
+            if (!wasActive) {
+                dropdown.classList.add('active');
+            }
+        }
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.user-dropdown')) {
+                document.querySelectorAll('.user-dropdown').forEach(d => {
+                    d.classList.remove('active');
+                });
+            }
+        });
+
+        // Mobile menu toggle
+        document.querySelector('.mobile-menu-toggle')?.addEventListener('click', function() {
+            const nav = document.querySelector('.nav');
+            nav.classList.toggle('mobile-active');
+        });
+    </script>
+</body>
+</html>

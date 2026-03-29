@@ -3,6 +3,14 @@
 {% block title %}Contact - RD Ménage à Domicile{% endblock %}
 
 {% block content %}
+{% if user %}
+<div class="welcome-banner">
+    <div class="container">
+        <p>👋 Bonjour {{ user.prenom }} {{ user.nom }}, vos informations sont pré-remplies ci-dessous !</p>
+    </div>
+</div>
+{% endif %}
+
 <div class="contact-container">
     <div class="container">
         <div class="contact-header">
@@ -37,17 +45,21 @@
                     <form method="post" action="/api/contact" class="contact-form">
                         <div class="form-group">
                             <label for="nom">Nom *</label>
-                            <input type="text" id="nom" name="nom" required class="form-control">
+                            <input type="text" id="nom" name="nom" required class="form-control" 
+                                {% if user %}value="{{ user.nom or '' }}" placeholder="Entrez votre nom"{% endif %}>
                         </div>
                         
                         <div class="form-group">
                             <label for="email">Email *</label>
-                            <input type="email" id="email" name="email" required class="form-control">
+                            <input type="email" id="email" name="email" required class="form-control" 
+                                {% if user %}value="{{ user.email or '' }}" readonly{% endif %}>
+                            {% if user %}<small>Email pré-rempli depuis votre compte</small>{% endif %}
                         </div>
                         
                         <div class="form-group">
                             <label for="telephone">Téléphone</label>
-                            <input type="tel" id="telephone" name="telephone" class="form-control">
+                            <input type="tel" id="telephone" name="telephone" class="form-control" 
+                                {% if user %}value="{{ user.telephone or '' }}" placeholder="Entrez votre numéro"{% endif %}>
                         </div>
                         
                         <div class="form-group">
@@ -64,17 +76,21 @@
                     <form method="post" action="/api/quote" class="contact-form">
                         <div class="form-group">
                             <label for="devis-nom">Nom *</label>
-                            <input type="text" id="devis-nom" name="nom" required class="form-control">
+                            <input type="text" id="devis-nom" name="nom" required class="form-control" 
+                                {% if user %}value="{{ user.nom or '' }}" placeholder="Entrez votre nom"{% endif %}>
                         </div>
                         
                         <div class="form-group">
                             <label for="devis-email">Email *</label>
-                            <input type="email" id="devis-email" name="email" required class="form-control">
+                            <input type="email" id="devis-email" name="email" required class="form-control" 
+                                {% if user %}value="{{ user.email or '' }}" readonly{% endif %}>
+                            {% if user %}<small>Email pré-rempli depuis votre compte</small>{% endif %}
                         </div>
                         
                         <div class="form-group">
                             <label for="devis-telephone">Téléphone</label>
-                            <input type="tel" id="devis-telephone" name="telephone" class="form-control">
+                            <input type="tel" id="devis-telephone" name="telephone" class="form-control" 
+                                {% if user %}value="{{ user.telephone or '' }}" placeholder="Entrez votre numéro"{% endif %}>
                         </div>
                         
                         <div class="form-group">
@@ -181,6 +197,32 @@
 
 .contact-form .form-group {
     margin-bottom: 0;
+}
+
+.form-control[readonly] {
+    background-color: var(--bg-tertiary);
+    color: var(--dark-gray);
+    cursor: not-allowed;
+}
+
+.form-group small {
+    color: var(--dark-gray);
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+    display: block;
+}
+
+.welcome-banner {
+    background-color: var(--success);
+    color: white;
+    padding: 1rem 0;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.welcome-banner p {
+    margin: 0;
+    font-weight: 500;
 }
 
 @media (max-width: 768px) {

@@ -151,12 +151,48 @@ async def admin_sync(request: Request):
     if not user or user.get("role") != "admin":
         return RedirectResponse(url="/login", status_code=303)
     
+    # Récupérer les informations de synchronisation
+    try:
+        import sqlite3
+        from datetime import datetime
+        
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+        
+        # Compter les messages avec réponse
+        cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE reponse_admin IS NOT NULL")
+        synced_count = cursor.fetchone()[0]
+        
+        # Dernière synchronisation (dernier message avec réponse)
+        cursor.execute("SELECT MAX(date_reponse) FROM contact_messages WHERE reponse_admin IS NOT NULL")
+        last_sync_result = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        # Formater la date
+        if last_sync_result:
+            try:
+                dt = datetime.fromisoformat(last_sync_result)
+                last_sync = dt.strftime("%d/%m/%Y %H:%M")
+            except:
+                last_sync = "Date inconnue"
+        else:
+            last_sync = "Jamais"
+        
+        sync_status = "active" if synced_count > 0 else "inactive"
+        
+    except Exception as e:
+        print(f"Erreur récupération statut sync: {e}")
+        sync_status = "inactive"
+        last_sync = "Erreur"
+        synced_count = "0"
+    
     return templates.TemplateResponse("admin_sync.html", {
         "request": request,
         "user": user,
-        "sync_status": "inactive",
-        "last_sync": "Jamais",
-        "synced_count": "0"
+        "sync_status": sync_status,
+        "last_sync": last_sync,
+        "synced_count": str(synced_count)
     })
 
 @router.post("/admin/sync/manual")
@@ -181,21 +217,23 @@ async def manual_sync(request: Request):
 
 @router.post("/webhook/gmail-sync")
 async def gmail_webhook(request: Request):
-    """Webhook pour synchronisation Gmail (optionnel)"""
+    """Webhook pour synchronisation Gmail (gratuit et automatique)"""
     try:
-        # Vérifier si c'est bien une requête de Gmail
+        # Vérifier si c'est bien une requête valide
         body = await request.body()
         
-        print("📧 Webhook Gmail reçu")
+        print("📧 Webhook Gmail reçu - synchronisation lancée")
         
         # Lancer la synchronisation
         success = sync_email_responses()
         
         if success:
-            return {"status": "success", "message": "Synchronisation effectuée"}
+            print("✅ Synchronisation webhook terminée avec succès")
+            return {"status": "success", "message": "Synchronisation effectuée avec succès", "synced_count": "multiple"}
         else:
-            return {"status": "error", "message": "Erreur synchronisation"}
+            print("❌ Erreur lors de la synchronisation webhook")
+            return {"status": "error", "message": "Erreur lors de la synchronisation"}
             
     except Exception as e:
-        print(f"Erreur webhook: {e}")
-        return {"status": "error", "message": str(e)}
+        print(f"❌ Erreur critique webhook: {e}")
+        return {"status": "error", "message": f"Erreur: {str(e)}"}

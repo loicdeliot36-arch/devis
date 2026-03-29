@@ -26,26 +26,5 @@ services:
       - key: RECIPIENT_EMAIL
         sync: false
 
-  # Cron Job pour la synchronisation automatique
-  - type: cron
-    name: email-sync
-    schedule: "*/5 * * * *"  # Toutes les 5 minutes
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "python render_sync.py"
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.12.9
-      # Variables SMTP pour la synchronisation
-      - key: SMTP_HOST
-        sync: false
-      - key: SMTP_PORT
-        sync: false
-      - key: SMTP_USER
-        sync: false
-      - key: SMTP_PASS
-        sync: false
-      - key: ADMIN_EMAIL
-        sync: false
-
 databases:
   # SQLite est inclus dans Python, pas besoin de base de données externe

@@ -54,6 +54,9 @@ class EmailService:
             msg['Subject'] = f"[RD MENAGE] Nouveau message de {nom} ({email})"
             msg['Reply-To'] = email  # Ajouter Reply-To pour pouvoir répondre directement
             
+            # Ajouter un lien de synchronisation webhook (à remplacer après déploiement)
+            # sync_url = "https://votre-domaine-render.com/webhook/gmail-sync"
+            
             body = f"""
 Nouveau message de contact reçu :
 
@@ -66,6 +69,11 @@ Message :
 {message}
 
 ---
+📧 Pour synchroniser votre réponse automatiquement : 
+1. Répondez à cet email depuis Gmail
+2. La synchronisation se fera automatiquement toutes les 5 minutes
+3. Ou allez sur l'admin : /admin/sync
+
 Cet message a été envoyé depuis le formulaire de contact du site RD Ménage à Domicile.
             """
             

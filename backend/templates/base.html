@@ -23,11 +23,13 @@
                     <a href="/contact" class="nav-link">Contact</a>
                     {% if user %}
                         <a href="/dashboard" class="nav-link">Mon espace</a>
+                        <a href="/profile" class="nav-link">Mon profil</a>
                         {% if user.role == 'admin' %}
                         <a href="/admin/messages" class="nav-link">Messages</a>
                         <a href="/admin/users" class="nav-link">Utilisateurs</a>
                         <a href="/admin/sync" class="nav-link">Sync</a>
                         {% endif %}
+                        <span class="nav-link user-info">{{ user.prenom }} {{ user.nom }}</span>
                         <a href="/logout" class="nav-link">Déconnexion</a>
                     {% else %}
                         <a href="/login" class="nav-link">Connexion</a>
@@ -50,19 +52,24 @@
                     <p>Services de ménage professionnels</p>
                 </div>
                 <div class="footer-section">
-                    <h4>Contact</h4>
-                    <p>📞 07 82 71 41 55</p>
-                    <p>✉️ racheldemange702@gmail.com</p>
-                    <p>📍 18 rue de la Charrière, 70240 Saulx</p>
+                    <h4>Services</h4>
+                    <ul>
+                        <li>Ménage régulier</li>
+                        <li>Grand nettoyage</li>
+                        <li>Nettoyage de fin de chantier</li>
+                    </ul>
                 </div>
                 <div class="footer-section">
-                    <h4>Informations</h4>
-                    <p>SIRET : 518 273 362 00047</p>
-                    <p>🌐 <a href="https://devis-t5m6.onrender.com" target="_blank">devis-t5m6.onrender.com</a></p>
+                    <h4>Contact</h4>
+                    <ul>
+                        <li>Téléphone : À venir</li>
+                        <li>Email : contact@rdmenage.fr</li>
+                        <li>Localisation : France</li>
+                    </ul>
                 </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2024 RD Ménage à Domicile. Tous droits réservés.</p>
+                <p>&copy; 2026 - RD Ménage à Domicile. Tous droits réservés.</p>
             </div>
         </div>
     </footer>

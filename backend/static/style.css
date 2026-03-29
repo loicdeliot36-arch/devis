@@ -79,18 +79,38 @@ body {
 
 .nav {
     display: flex;
+    align-items: center;
     gap: 2rem;
 }
 
 .nav-link {
-    color: var(--primary-blue);
     text-decoration: none;
+    color: var(--dark-gray);
     font-weight: 500;
     transition: color 0.3s ease;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
 }
 
 .nav-link:hover {
-    color: var(--primary-light);
+    color: var(--primary-blue);
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.user-info {
+    background-color: var(--primary-blue);
+    color: var(--white) !important;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    cursor: default;
+    text-decoration: none !important;
+    display: inline-block;
+}
+
+.user-info:hover {
+    background-color: var(--primary-blue) !important;
+    color: var(--white) !important;
 }
 
 /* Welcome Banner */

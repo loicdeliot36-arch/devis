@@ -14,6 +14,55 @@ from models import UserCreate, UserLogin
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+@router.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request):
+    """Page de profil utilisateur"""
+    user = get_user_from_token(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    return templates.TemplateResponse("profile.html", {
+        "request": request,
+        "user": user
+    })
+
+@router.post("/profile")
+async def update_profile(
+    request: Request,
+    nom: str = Form(...),
+    prenom: str = Form(...),
+    date_naissance: str = Form(""),
+    telephone: str = Form("")
+):
+    """Mise à jour du profil utilisateur"""
+    user = get_user_from_token(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=303)
+    
+    try:
+        import sqlite3
+        from pathlib import Path
+        
+        db_path = Path(__file__).parent.parent / "database.db"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Mettre à jour les informations
+        cursor.execute('''
+            UPDATE users 
+            SET nom = ?, prenom = ?, date_naissance = ?, telephone = ?
+            WHERE id = ?
+        ''', (nom, prenom, date_naissance if date_naissance else None, telephone if telephone else None, user["id"]))
+        
+        conn.commit()
+        conn.close()
+        
+        return RedirectResponse(url="/profile?success=1", status_code=303)
+        
+    except Exception as e:
+        print(f"Erreur mise à jour profil: {e}")
+        return RedirectResponse(url="/profile?error=1", status_code=303)
+
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
     """Page de connexion"""
