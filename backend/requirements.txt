@@ -12,9 +12,7 @@ python-multipart==0.0.6
 python-jose[cryptography]==3.3.0
 bcrypt==4.1.2
 passlib[bcrypt]==1.7.4
-sqlite3
 schedule==1.2.0
-imaplib==0.1
 
-# Pour les emails SMTP (déjà inclus dans Python standard)
-# Aucune dépendance supplémentaire nécessaire
+# Pour les emails SMTP et IMAP (déjà inclus dans Python standard)
+# sqlite3, imaplib, smtplib sont inclus dans Python
