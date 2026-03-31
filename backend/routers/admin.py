@@ -63,6 +63,630 @@ async def admin_page(request: Request):
         "contacts": contacts
     })
 
+@router.get("/messages", response_class=HTMLResponse)
+async def messages_page(request: Request):
+    """Page de gestion des messages (interface desktop)"""
+    print("=== ADMIN MESSAGES PAGE ===")
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        print("Utilisateur non admin ou non connecté")
+        return RedirectResponse(url="/login", status_code=303)
+    
+    print(f"Utilisateur admin connecté: {user}")
+    
+    # Récupérer tous les messages
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, nom, email, telephone, message, date_creation, 
+               statut, reponse_admin, date_reponse
+        FROM contact_messages 
+        ORDER BY date_creation DESC
+    """)
+    messages = cursor.fetchall()
+    
+    print(f"Messages récupérés: {len(messages)}")
+    
+    # Statistiques
+    cursor.execute("SELECT COUNT(*) FROM contact_messages")
+    total_messages = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE statut = 'traite'")
+    treated_messages = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE statut = 'non_traite'")
+    pending_messages = cursor.fetchone()[0]
+    
+    treatment_rate = round((treated_messages / total_messages * 100) if total_messages > 0 else 0)
+    
+    conn.close()
+    
+    print(f"Stats: total={total_messages}, treated={treated_messages}, pending={pending_messages}")
+    
+    # Formater les messages
+    formatted_messages = []
+    for msg in messages:
+        formatted_messages.append({
+            'id': msg[0],
+            'nom': msg[1],
+            'email': msg[2],
+            'telephone': msg[3],
+            'message': msg[4],
+            'date_creation': msg[5],
+            'statut': msg[6],
+            'reponse_admin': msg[7],
+            'date_reponse': msg[8]
+        })
+    
+    print(f"Template utilisé: messages_desktop.html")
+    
+    return templates.TemplateResponse("messages_desktop.html", {
+        "request": request,
+        "user": user,
+        "messages": formatted_messages,
+        "total_messages": total_messages,
+        "treated_messages": treated_messages,
+        "pending_messages": pending_messages,
+        "treatment_rate": treatment_rate
+    })
+
+@router.get("/users", response_class=HTMLResponse)
+async def users_page(request: Request):
+    """Page de gestion des utilisateurs (interface desktop)"""
+    print("=== ADMIN USERS PAGE ===")
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        print("Utilisateur non admin ou non connecté")
+        return RedirectResponse(url="/login", status_code=303)
+    
+    print(f"Utilisateur admin connecté: {user}")
+    
+    # Récupérer tous les utilisateurs
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        SELECT id, email, nom, prenom, telephone, role, date_creation
+        FROM users 
+        ORDER BY date_creation DESC
+    """)
+    users = cursor.fetchall()
+    
+    print(f"Utilisateurs récupérés: {len(users)}")
+    
+    # Statistiques
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'admin'")
+    admin_users = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM users WHERE role = 'user'")
+    regular_users = cursor.fetchone()[0]
+    
+    # Nouveaux utilisateurs ce mois
+    cursor.execute("""
+        SELECT COUNT(*) FROM users 
+        WHERE date_creation >= date('now', '-30 days')
+    """)
+    new_users_month = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    print(f"Stats: total={total_users}, admin={admin_users}, regular={regular_users}")
+    
+    # Formater les utilisateurs avec statistiques
+    formatted_users = []
+    for user_data in users:
+        user_id = user_data[0]
+        
+        # Compter les messages de cet utilisateur
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE email = ?", (user_data[1],))
+        message_count = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            SELECT COUNT(*) FROM contact_messages 
+            WHERE email = ? AND message LIKE '%devis%'
+        """, (user_data[1],))
+        quote_count = cursor.fetchone()[0]
+        
+        cursor.execute("""
+            SELECT MAX(date_creation) FROM contact_messages 
+            WHERE email = ?
+        """, (user_data[1],))
+        last_contact = cursor.fetchone()[0]
+        
+        conn.close()
+        
+        formatted_users.append({
+            'id': user_id,
+            'email': user_data[1],
+            'nom': user_data[2],
+            'prenom': user_data[3],
+            'telephone': user_data[4],
+            'role': user_data[5],
+            'date_creation': user_data[6],
+            'message_count': message_count,
+            'quote_count': quote_count,
+            'last_contact': last_contact
+        })
+    
+    print(f"Template utilisé: users_desktop.html")
+    
+    return templates.TemplateResponse("users_desktop.html", {
+        "request": request,
+        "user": user,
+        "users": formatted_users,
+        "total_users": total_users,
+        "admin_users": admin_users,
+        "regular_users": regular_users,
+        "new_users_month": new_users_month
+    })
+
+@router.get("/messages/{message_id}/details")
+async def get_message_details(message_id: int, request: Request):
+    """Récupérer les détails d'un message"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, nom, email, telephone, message, date_creation, 
+                   statut, reponse_admin, date_reponse
+            FROM contact_messages 
+            WHERE id = ?
+        """, (message_id,))
+        message = cursor.fetchone()
+        conn.close()
+        
+        if message:
+            return {
+                'id': message[0],
+                'nom': message[1],
+                'email': message[2],
+                'telephone': message[3],
+                'message': message[4],
+                'date_creation': message[5],
+                'statut': message[6],
+                'reponse_admin': message[7],
+                'date_reponse': message[8]
+            }
+        else:
+            return {"error": "Message non trouvé"}
+            
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.delete("/messages/{message_id}/delete")
+async def delete_message(message_id: int, request: Request):
+    """Supprimer un message"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        # Vérifier si le message existe
+        cursor.execute("SELECT nom, email FROM contact_messages WHERE id = ?", (message_id,))
+        message_info = cursor.fetchone()
+        
+        if not message_info:
+            conn.close()
+            return {"error": "Message non trouvé"}
+        
+        # Supprimer le message
+        cursor.execute("DELETE FROM contact_messages WHERE id = ?", (message_id,))
+        deleted_count = cursor.rowcount
+        
+        conn.commit()
+        conn.close()
+        
+        if deleted_count > 0:
+            return {
+                "success": True, 
+                "message": f"Message de {message_info[0]} ({message_info[1]}) supprimé avec succès"
+            }
+        else:
+            return {"error": "Aucun message supprimé"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/messages/{message_id}/reply")
+async def reply_to_message(message_id: int, request: Request):
+    """Répondre à un message"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        data = await request.json()
+        reply_message = data.get('message')
+        mark_treated = data.get('mark_treated', True)
+        
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        # Récupérer les infos du message pour l'email
+        cursor.execute("SELECT nom, email FROM contact_messages WHERE id = ?", (message_id,))
+        message_info = cursor.fetchone()
+        
+        if not message_info:
+            conn.close()
+            return {"error": "Message non trouvé"}
+        
+        client_name = message_info[0]
+        client_email = message_info[1]
+        
+        # Envoyer l'email au client
+        try:
+            from email_utils import get_email_service
+            email_service = get_email_service()
+            
+            email_sent = email_service.send_response_to_client(
+                client_email=client_email,
+                client_name=client_name,
+                response=reply_message
+            )
+            
+            if email_sent:
+                print(f"✅ Email de réponse envoyé à {client_email}")
+            else:
+                print(f"❌ Échec envoi email à {client_email}")
+                
+        except Exception as email_error:
+            print(f"Erreur email réponse: {email_error}")
+        
+        # Mettre à jour le message avec la réponse
+        cursor.execute("""
+            UPDATE contact_messages 
+            SET reponse_admin = ?, date_reponse = datetime('now'), statut = ?
+            WHERE id = ?
+        """, (reply_message, 'traite' if mark_treated else 'non_traite', message_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True, 
+            "message": "Réponse envoyée avec succès",
+            "email_sent": email_sent if 'email_sent' in locals() else False
+        }
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/messages/{message_id}/mark-treated")
+async def mark_message_as_treated(message_id: int, request: Request):
+    """Marquer un message comme traité"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE contact_messages 
+            SET statut = 'traite', date_reponse = datetime('now')
+            WHERE id = ?
+        """, (message_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Message marqué comme traité"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/messages/{message_id}/mark-pending")
+async def mark_message_as_pending(message_id: int, request: Request):
+    """Marquer un message comme en attente"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE contact_messages 
+            SET statut = 'non_traite'
+            WHERE id = ?
+        """, (message_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Message marqué comme en attente"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.get("/users/{user_id}/details")
+async def get_user_details(user_id: int, request: Request):
+    """Récupérer les détails d'un utilisateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT id, email, nom, prenom, telephone, role, date_creation, date_naissance
+            FROM users 
+            WHERE id = ?
+        """, (user_id,))
+        user_data = cursor.fetchone()
+        conn.close()
+        
+        if user_data:
+            return {
+                'id': user_data[0],
+                'email': user_data[1],
+                'nom': user_data[2],
+                'prenom': user_data[3],
+                'telephone': user_data[4],
+                'role': user_data[5],
+                'date_creation': user_data[6],
+                'date_naissance': user_data[7]
+            }
+        else:
+            return {"error": "Utilisateur non trouvé"}
+            
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/users/{user_id}/promote")
+async def promote_user_to_admin(user_id: int, request: Request):
+    """Promouvoir un utilisateur en administrateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE users 
+            SET role = 'admin'
+            WHERE id = ?
+        """, (user_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Utilisateur promu avec succès"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/users/{user_id}/demote")
+async def demote_user_to_user(user_id: int, request: Request):
+    """Rétrograder un administrateur en utilisateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE users 
+            SET role = 'user'
+            WHERE id = ?
+        """, (user_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Utilisateur rétrogradé avec succès"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/users/{user_id}/reset-password")
+async def reset_user_password(user_id: int, request: Request):
+    """Réinitialiser le mot de passe d'un utilisateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        # Générer un nouveau mot de passe aléatoire
+        import random
+        import string
+        new_password = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
+        
+        # Hasher le mot de passe
+        import bcrypt
+        password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Mettre à jour le mot de passe
+        cursor.execute("""
+            UPDATE users 
+            SET password_hash = ?
+            WHERE id = ?
+        """, (password_hash, user_id))
+        
+        # Récupérer l'email de l'utilisateur
+        cursor.execute("SELECT email FROM users WHERE id = ?", (user_id,))
+        user_email = cursor.fetchone()[0]
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True, 
+            "message": "Mot de passe réinitialisé avec succès",
+            "new_password": new_password,
+            "email": user_email
+        }
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.delete("/users/{user_id}/delete")
+async def delete_user(user_id: int, request: Request):
+    """Supprimer un utilisateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        # Supprimer l'utilisateur
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Utilisateur supprimé avec succès"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/users/add")
+async def add_user(request: Request):
+    """Ajouter un nouvel utilisateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        form_data = await request.form()
+        
+        email = form_data.get('email')
+        nom = form_data.get('nom')
+        prenom = form_data.get('prenom')
+        password = form_data.get('password')
+        telephone = form_data.get('telephone')
+        role = form_data.get('role', 'user')
+        
+        # Vérifier si l'utilisateur existe déjà
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            conn.close()
+            return {"error": "Cet email est déjà utilisé"}
+        
+        # Hasher le mot de passe
+        import bcrypt
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+        
+        # Insérer le nouvel utilisateur
+        cursor.execute("""
+            INSERT INTO users (email, password_hash, nom, prenom, telephone, role, date_creation)
+            VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
+        """, (email, password_hash, nom, prenom, telephone, role))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Utilisateur ajouté avec succès"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.post("/users/{user_id}/edit")
+async def edit_user(user_id: int, request: Request):
+    """Modifier un utilisateur"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        form_data = await request.form()
+        
+        nom = form_data.get('nom')
+        prenom = form_data.get('prenom')
+        telephone = form_data.get('telephone')
+        role = form_data.get('role')
+        
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            UPDATE users 
+            SET nom = ?, prenom = ?, telephone = ?, role = ?
+            WHERE id = ?
+        """, (nom, prenom, telephone, role, user_id))
+        
+        conn.commit()
+        conn.close()
+        
+        return {"success": True, "message": "Utilisateur modifié avec succès"}
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.get("/users/export")
+async def export_users(request: Request):
+    """Exporter la liste des utilisateurs"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT nom, prenom, email, telephone, role, date_creation
+            FROM users 
+            ORDER BY date_creation DESC
+        """)
+        users = cursor.fetchall()
+        conn.close()
+        
+        # Créer le contenu CSV
+        import csv
+        import io
+        
+        output = io.StringIO()
+        writer = csv.writer(output)
+        
+        # En-tête
+        writer.writerow(['Nom', 'Prénom', 'Email', 'Téléphone', 'Rôle', 'Date de création'])
+        
+        # Données
+        for user_data in users:
+            writer.writerow(user_data)
+        
+        # Retourner le fichier CSV
+        from fastapi.responses import Response
+        return Response(
+            content=output.getvalue(),
+            media_type="text/csv",
+            headers={"Content-Disposition": "attachment; filename=users.csv"}
+        )
+        
+    except Exception as e:
+        return {"error": f"Erreur: {str(e)}"}
+
 @router.post("/admin/mark-treated/{contact_id}")
 async def mark_treated(contact_id: int, request: Request):
     """Marquer un message comme traité"""
@@ -75,20 +699,61 @@ async def mark_treated(contact_id: int, request: Request):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        # Mettre à jour dans la NOUVELLE table
-        cursor.execute('''
+        cursor.execute("""
             UPDATE contact_messages 
-            SET statut = 'traite' 
+            SET statut = 'traite', date_reponse = datetime('now')
             WHERE id = ?
-        ''', (contact_id,))
+        """, (contact_id,))
         
         conn.commit()
         conn.close()
         
-        return RedirectResponse(url="/admin/messages", status_code=303)
+        return {"success": True, "message": "Message marqué comme traité"}
+        
     except Exception as e:
-        print(f"Erreur dans mark-treated: {e}")
-        return RedirectResponse(url="/admin/messages", status_code=303)
+        return {"error": f"Erreur: {str(e)}"}
+
+@router.get("/sync", response_class=HTMLResponse)
+async def sync_page(request: Request):
+    """Page de synchronisation des données"""
+    print("=== ADMIN SYNC PAGE ===")
+    user = get_user_from_token(request)
+    if not user or user.get("role") != "admin":
+        return RedirectResponse(url="/login", status_code=303)
+    
+    # Récupérer les statistiques
+    conn = sqlite3.connect('database.db')
+    cursor = conn.cursor()
+    
+    # Statistiques des messages
+    cursor.execute("SELECT COUNT(*) FROM contact_messages")
+    total_messages = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE statut = 'traite'")
+    treated_messages = cursor.fetchone()[0]
+    
+    cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE statut = 'non_traite'")
+    pending_messages = cursor.fetchone()[0]
+    
+    # Statistiques des utilisateurs
+    cursor.execute("SELECT COUNT(*) FROM users")
+    total_users = cursor.fetchone()[0]
+    
+    conn.close()
+    
+    # Heure actuelle
+    from datetime import datetime
+    current_time = datetime.now().strftime('%H:%M:%S')
+    
+    return templates.TemplateResponse("sync_desktop.html", {
+        "request": request,
+        "user": user,
+        "total_messages": total_messages,
+        "treated_messages": treated_messages,
+        "pending_messages": pending_messages,
+        "total_users": total_users,
+        "current_time": current_time
+    })
 
 @router.post("/admin/delete/{contact_id}")
 async def delete_contact(contact_id: int, request: Request):
@@ -102,16 +767,12 @@ async def delete_contact(contact_id: int, request: Request):
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        # Supprimer de la NOUVELLE table
-        cursor.execute('''
-            DELETE FROM contact_messages 
-            WHERE id = ?
-        ''', (contact_id,))
+        cursor.execute("DELETE FROM contact_messages WHERE id = ?", (contact_id,))
         
         conn.commit()
         conn.close()
         
-        return RedirectResponse(url="/admin/messages", status_code=303)
+        return {"success": True, "message": "Message supprimé"}
+        
     except Exception as e:
-        print(f"Erreur dans delete: {e}")
-        return RedirectResponse(url="/admin/messages", status_code=303)
+        return {"error": f"Erreur: {str(e)}"}

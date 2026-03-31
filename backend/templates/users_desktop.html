@@ -1,0 +1,922 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Utilisateurs - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="users-header">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>👥 Gestion des utilisateurs</h2>
+            <p>Consultez et gérez les comptes utilisateurs</p>
+        </div>
+        
+        <div class="users-stats">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_users }}</div>
+                <div class="stat-label">Total utilisateurs</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ admin_users }}</div>
+                <div class="stat-label">Administrateurs</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ regular_users }}</div>
+                <div class="stat-label">Utilisateurs</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ new_users_month }}</div>
+                <div class="stat-label">Nouveaux ce mois</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="users-actions">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3>🔧 Actions rapides</h3>
+        </div>
+        
+        <div class="actions-content">
+            <button class="btn btn-primary" onclick="openAddUserModal()">
+                <span>➕</span>
+                Ajouter un utilisateur
+            </button>
+            <button class="btn btn-success" onclick="exportUsers()">
+                <span>📥</span>
+                Exporter la liste
+            </button>
+            <button class="btn btn-outline" onclick="refreshUsers()">
+                <span>🔄</span>
+                Actualiser
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="users-filters">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3>🔍 Filtres et recherche</h3>
+        </div>
+        
+        <div class="filters-content">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="role-filter">Rôle</label>
+                    <select id="role-filter" class="form-control">
+                        <option value="">Tous les rôles</option>
+                        <option value="admin">Administrateurs</option>
+                        <option value="user">Utilisateurs</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="search-filter">Recherche</label>
+                    <input type="text" id="search-filter" class="form-control" 
+                           placeholder="Rechercher par nom, email...">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="date-filter">Date d'inscription</label>
+                    <input type="date" id="date-filter" class="form-control">
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span>🔍</span>
+                        Appliquer
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <span>🔄</span>
+                        Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="users-list">
+    {% for user in users %}
+    <div class="user-card fade-in" 
+         data-role="{{ user.role }}" 
+         data-name="{{ (user.nom or '')|lower }} {{ (user.prenom or '')|lower }}" 
+         data-email="{{ user.email|lower }}"
+         data-date="{{ user.date_creation }}">
+        <div class="user-header">
+            <div class="user-avatar">
+                <div class="avatar-circle">
+                    <span>{{ (user.prenom or 'U')[0]|upper }}{{ (user.nom or 'ser')[0]|upper }}</span>
+                </div>
+            </div>
+            
+            <div class="user-info">
+                <h3>{{ user.prenom or 'Prénom' }} {{ user.nom or 'Nom' }}</h3>
+                <p>{{ user.email }}</p>
+                {% if user.telephone %}
+                <p>📞 {{ user.telephone }}</p>
+                {% endif %}
+                <div class="user-meta">
+                    <span class="user-role {{ user.role }}">
+                        {{ '👑 Admin' if user.role == 'admin' else '👤 Utilisateur' }}
+                    </span>
+                    <span class="user-date">
+                        Inscrit le {{ user.date_creation or 'Non défini' }}
+                    </span>
+                </div>
+            </div>
+            
+            <div class="user-status">
+                {% if user.role == 'admin' %}
+                <span class="status-badge admin">Admin</span>
+                {% else %}
+                <span class="status-badge user">Utilisateur</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="user-stats">
+            <div class="user-stat">
+                <span>{{ user.message_count or 0 }}</span>
+                <small>Messages</small>
+            </div>
+            <div class="user-stat">
+                <span>{{ user.quote_count or 0 }}</span>
+                <small>Devis</small>
+            </div>
+            <div class="user-stat">
+                <span>{{ user.last_contact or 'Jamais' }}</span>
+                <small>Dernier contact</small>
+            </div>
+        </div>
+        
+        <div class="user-actions">
+            <button class="btn btn-primary" onclick="viewUserDetails({{ user.id }})">
+                <span>👁️</span>
+                Détails
+            </button>
+            
+            <button class="btn btn-secondary" onclick="editUser({{ user.id }})">
+                <span>✏️</span>
+                Modifier
+            </button>
+            
+            {% if user.role == 'user' %}
+            <button class="btn btn-success" onclick="promoteToAdmin({{ user.id }})">
+                <span>👑</span>
+                Promouvoir admin
+            </button>
+            {% else %}
+            <button class="btn btn-warning" onclick="demoteToUser({{ user.id }})">
+                <span>👤</span>
+                Rétrograder
+            </button>
+            {% endif %}
+            
+            <button class="btn btn-outline" onclick="resetPassword({{ user.id }}, '{{ user.email }}')">
+                <span>🔑</span>
+                Réinitialiser MP
+            </button>
+            
+            <button class="btn btn-danger" onclick="deleteUser({{ user.id }}, '{{ user.email }}')">
+                <span>🗑️</span>
+                Supprimer
+            </button>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal d'ajout d'utilisateur -->
+<div id="addUserModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>➕ Ajouter un utilisateur</h3>
+            <button class="modal-close" onclick="closeAddUserModal()">&times;</button>
+        </div>
+        
+        <form id="addUserForm" class="user-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="new-user-nom">Nom *</label>
+                    <input type="text" id="new-user-nom" name="nom" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="new-user-prenom">Prénom *</label>
+                    <input type="text" id="new-user-prenom" name="prenom" required class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="new-user-email">Email *</label>
+                <input type="email" id="new-user-email" name="email" required class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="new-user-password">Mot de passe *</label>
+                <input type="password" id="new-user-password" name="password" required class="form-control">
+                <small>Laissez vide pour générer automatiquement</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="new-user-telephone">Téléphone</label>
+                <input type="tel" id="new-user-telephone" name="telephone" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="new-user-role">Rôle *</label>
+                <select id="new-user-role" name="role" required class="form-control">
+                    <option value="user">Utilisateur</option>
+                    <option value="admin">Administrateur</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeAddUserModal()">
+                    Annuler
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <span>➕</span>
+                    Ajouter l'utilisateur
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de détails -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Détails de l'utilisateur</h3>
+            <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+        </div>
+        
+        <div id="details-content" class="details-content">
+            <!-- Contenu chargé dynamiquement -->
+        </div>
+    </div>
+</div>
+
+<!-- Modal d'édition -->
+<div id="editUserModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✏️ Modifier l'utilisateur</h3>
+            <button class="modal-close" onclick="closeEditUserModal()">&times;</button>
+        </div>
+        
+        <form id="editUserForm" class="user-form">
+            <input type="hidden" id="edit-user-id">
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="edit-user-nom">Nom *</label>
+                    <input type="text" id="edit-user-nom" name="nom" required class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit-user-prenom">Prénom *</label>
+                    <input type="text" id="edit-user-prenom" name="prenom" required class="form-control">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-user-email">Email *</label>
+                <input type="email" id="edit-user-email" name="email" required class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-user-telephone">Téléphone</label>
+                <input type="tel" id="edit-user-telephone" name="telephone" class="form-control">
+            </div>
+            
+            <div class="form-group">
+                <label for="edit-user-role">Rôle *</label>
+                <select id="edit-user-role" name="role" required class="form-control">
+                    <option value="user">Utilisateur</option>
+                    <option value="admin">Administrateur</option>
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeEditUserModal()">
+                    Annuler
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <span>💾</span>
+                    Enregistrer les modifications
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filtrage des utilisateurs
+function applyFilters() {
+    const roleFilter = document.getElementById('role-filter').value;
+    const searchFilter = document.getElementById('search-filter').value.toLowerCase();
+    const dateFilter = document.getElementById('date-filter').value;
+    
+    const users = document.querySelectorAll('.user-card');
+    
+    users.forEach(user => {
+        const role = user.dataset.role;
+        const name = user.dataset.name;
+        const email = user.dataset.email;
+        const date = user.dataset.date;
+        
+        let show = true;
+        
+        // Filtre par rôle
+        if (roleFilter && role !== roleFilter) {
+            show = false;
+        }
+        
+        // Filtre par recherche
+        if (searchFilter && !name.includes(searchFilter) && !email.includes(searchFilter)) {
+            show = false;
+        }
+        
+        // Filtre par date
+        if (dateFilter && date !== dateFilter) {
+            show = false;
+        }
+        
+        user.style.display = show ? 'block' : 'none';
+    });
+}
+
+function resetFilters() {
+    document.getElementById('role-filter').value = '';
+    document.getElementById('search-filter').value = '';
+    document.getElementById('date-filter').value = '';
+    applyFilters();
+}
+
+// Modal d'ajout
+function openAddUserModal() {
+    document.getElementById('addUserModal').style.display = 'block';
+}
+
+function closeAddUserModal() {
+    document.getElementById('addUserModal').style.display = 'none';
+    document.getElementById('addUserForm').reset();
+}
+
+// Modal d'édition
+async function editUser(userId) {
+    try {
+        const response = await fetch(`/admin/users/${userId}/details`);
+        const user = await response.json();
+        
+        if (response.ok) {
+            document.getElementById('edit-user-id').value = user.id;
+            document.getElementById('edit-user-nom').value = user.nom || '';
+            document.getElementById('edit-user-prenom').value = user.prenom || '';
+            document.getElementById('edit-user-email').value = user.email;
+            document.getElementById('edit-user-telephone').value = user.telephone || '';
+            document.getElementById('edit-user-role').value = user.role;
+            
+            document.getElementById('editUserModal').style.display = 'block';
+        } else {
+            showNotification('Erreur lors du chargement', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+}
+
+function closeEditUserModal() {
+    document.getElementById('editUserModal').style.display = 'none';
+    document.getElementById('editUserForm').reset();
+}
+
+// Modal de détails
+async function viewUserDetails(userId) {
+    try {
+        const response = await fetch(`/admin/users/${userId}/details`);
+        const user = await response.json();
+        
+        if (response.ok) {
+            const detailsContent = document.getElementById('details-content');
+            detailsContent.innerHTML = `
+                <div class="detail-section">
+                    <h4>👤 Informations personnelles</h4>
+                    <p><strong>Nom:</strong> ${user.nom || 'Non défini'}</p>
+                    <p><strong>Prénom:</strong> ${user.prenom || 'Non défini'}</p>
+                    <p><strong>Email:</strong> ${user.email}</p>
+                    <p><strong>Téléphone:</strong> ${user.telephone || 'Non défini'}</p>
+                    <p><strong>Date de naissance:</strong> ${user.date_naissance || 'Non défini'}</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>📊 Statistiques</h4>
+                    <p><strong>Rôle:</strong> ${user.role === 'admin' ? '👑 Administrateur' : '👤 Utilisateur'}</p>
+                    <p><strong>Date d'inscription:</strong> ${user.date_creation || 'Non défini'}</p>
+                    <p><strong>Messages envoyés:</strong> ${user.message_count || 0}</p>
+                    <p><strong>Demandes de devis:</strong> ${user.quote_count || 0}</p>
+                    <p><strong>Dernier contact:</strong> ${user.last_contact || 'Jamais'}</p>
+                </div>
+            `;
+            
+            document.getElementById('detailsModal').style.display = 'block';
+        } else {
+            showNotification('Erreur lors du chargement des détails', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').style.display = 'none';
+}
+
+// Actions sur les utilisateurs
+async function promoteToAdmin(userId) {
+    if (confirm('Êtes-vous sûr de vouloir promouvoir cet utilisateur en administrateur ?')) {
+        try {
+            const response = await fetch(`/admin/users/${userId}/promote`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showNotification('Utilisateur promu avec succès', 'success');
+                location.reload();
+            } else {
+                showNotification('Erreur lors de la promotion', 'error');
+            }
+        } catch (error) {
+            showNotification('Erreur de connexion', 'error');
+        }
+    }
+}
+
+async function demoteToUser(userId) {
+    if (confirm('Êtes-vous sûr de vouloir rétrograder cet administrateur en utilisateur simple ?')) {
+        try {
+            const response = await fetch(`/admin/users/${userId}/demote`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showNotification('Utilisateur rétrogradé avec succès', 'success');
+                location.reload();
+            } else {
+                showNotification('Erreur lors de la rétrogradation', 'error');
+            }
+        } catch (error) {
+            showNotification('Erreur de connexion', 'error');
+        }
+    }
+}
+
+async function resetPassword(userId, email) {
+    if (confirm(`Réinitialiser le mot de passe de ${email} ?\n\nUn nouveau mot de passe sera généré et envoyé par email.`)) {
+        try {
+            const response = await fetch(`/admin/users/${userId}/reset-password`, {
+                method: 'POST'
+            });
+            
+            if (response.ok) {
+                showNotification('Mot de passe réinitialisé avec succès', 'success');
+            } else {
+                showNotification('Erreur lors de la réinitialisation', 'error');
+            }
+        } catch (error) {
+            showNotification('Erreur de connexion', 'error');
+        }
+    }
+}
+
+async function deleteUser(userId, email) {
+    if (confirm(`ATTENTION : Supprimer définitivement l'utilisateur ${email} ?\n\nCette action est irréversible !`)) {
+        if (confirm('Dernière confirmation : Cette action ne peut pas être annulée.')) {
+            try {
+                const response = await fetch(`/admin/users/${userId}/delete`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    showNotification('Utilisateur supprimé avec succès', 'success');
+                    location.reload();
+                } else {
+                    showNotification('Erreur lors de la suppression', 'error');
+                }
+            } catch (error) {
+                showNotification('Erreur de connexion', 'error');
+            }
+        }
+    }
+}
+
+// Formulaires
+document.getElementById('addUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch('/admin/users/add', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            showNotification('Utilisateur ajouté avec succès', 'success');
+            closeAddUserModal();
+            location.reload();
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Erreur lors de l\'ajout', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+});
+
+document.getElementById('editUserForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const userId = document.getElementById('edit-user-id').value;
+    const formData = new FormData(e.target);
+    
+    try {
+        const response = await fetch(`/admin/users/${userId}/edit`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            showNotification('Utilisateur modifié avec succès', 'success');
+            closeEditUserModal();
+            location.reload();
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Erreur lors de la modification', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+});
+
+// Actions utilitaires
+function exportUsers() {
+    window.location.href = '/admin/users/export';
+}
+
+function refreshUsers() {
+    location.reload();
+}
+
+// Fermer les modals au clic extérieur
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
+
+<style>
+.users-header {
+    margin-bottom: 2rem;
+}
+
+.users-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.users-actions {
+    margin-bottom: 2rem;
+}
+
+.actions-content {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.users-filters {
+    margin-bottom: 2rem;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.users-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.user-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.user-card:hover {
+    box-shadow: var(--shadow);
+}
+
+.user-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.user-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    box-shadow: var(--shadow);
+}
+
+.user-info {
+    flex: 1;
+}
+
+.user-info h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.user-info p {
+    color: var(--text-secondary);
+    margin: 0.25rem 0;
+}
+
+.user-meta {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.5rem;
+}
+
+.user-role {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.user-role.admin {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+}
+
+.user-role.user {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+}
+
+.user-date {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.user-status {
+    flex-shrink: 0;
+}
+
+.status-badge {
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius);
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-badge.admin {
+    background: var(--accent-orange);
+    color: white;
+}
+
+.status-badge.user {
+    background: var(--primary-blue);
+    color: white;
+}
+
+.user-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.user-stat {
+    text-align: center;
+}
+
+.user-stat span {
+    display: block;
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    margin-bottom: 0.25rem;
+}
+
+.user-stat small {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+}
+
+.user-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.user-form {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: end;
+}
+
+.details-content {
+    padding: 1.5rem;
+}
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h4 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.detail-section p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .users-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .actions-content {
+        flex-direction: column;
+    }
+    
+    .filter-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .user-header {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .user-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .user-actions {
+        flex-direction: column;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>

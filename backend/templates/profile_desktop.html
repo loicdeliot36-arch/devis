@@ -1,0 +1,580 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Mon profil - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="profile-header">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>👤 Mon profil</h2>
+            <p>Gérez vos informations personnelles et vos préférences</p>
+        </div>
+        
+        <div class="profile-info">
+            <div class="profile-avatar">
+                <div class="avatar-circle">
+                    <span>{{ user.prenom[0]|upper }}{{ user.nom[0]|upper }}</span>
+                </div>
+            </div>
+            
+            <div class="profile-details">
+                <h3>{{ user.prenom }} {{ user.nom }}</h3>
+                <p>{{ user.email }}</p>
+                <span class="badge badge-info">{{ user.role|title }}</span>
+            </div>
+            
+            <div class="profile-stats">
+                <div class="stat-item">
+                    <div class="stat-number">{{ user_messages|length if user_messages else 0 }}</div>
+                    <div class="stat-label">Messages</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number">{{ user_requests|length if user_requests else 0 }}</div>
+                    <div class="stat-label">Demandes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-3">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>✏️ Informations personnelles</h2>
+            <p>Mettez à jour vos coordonnées</p>
+        </div>
+        
+        <form method="post" class="profile-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="nom">Nom *</label>
+                    <input type="text" id="nom" name="nom" required class="form-control" 
+                        value="{{ user.nom or '' }}" placeholder="Entrez votre nom">
+                </div>
+                
+                <div class="form-group">
+                    <label for="prenom">Prénom *</label>
+                    <input type="text" id="prenom" name="prenom" required class="form-control" 
+                        value="{{ user.prenom or '' }}" placeholder="Entrez votre prénom">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required class="form-control" 
+                    value="{{ user.email }}" readonly>
+                <small style="color: var(--text-secondary); font-size: 0.875rem;">L'email ne peut pas être modifié</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="telephone">Téléphone</label>
+                <input type="tel" id="telephone" name="telephone" class="form-control" 
+                    value="{{ user.telephone or '' }}" placeholder="06 12 34 56 78">
+            </div>
+            
+            <div class="form-group">
+                <label for="date_naissance">Date de naissance</label>
+                <input type="date" id="date_naissance" name="date_naissance" class="form-control" 
+                    value="{{ user.date_naissance or '' }}">
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-lg">
+                <span>💾</span>
+                Enregistrer les modifications
+            </button>
+        </form>
+    </div>
+    
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>🔐 Sécurité</h2>
+            <p>Gérez votre mot de passe</p>
+        </div>
+        
+        <form method="post" action="/profile/change-password" class="password-form">
+            <div class="form-group">
+                <label for="current_password">Mot de passe actuel</label>
+                <input type="password" id="current_password" name="current_password" 
+                    class="form-control" placeholder="Entrez votre mot de passe actuel">
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password">Nouveau mot de passe</label>
+                <input type="password" id="new_password" name="new_password" 
+                    class="form-control" placeholder="Entrez votre nouveau mot de passe">
+            </div>
+            
+            <div class="form-group">
+                <label for="confirm_password">Confirmer le mot de passe</label>
+                <input type="password" id="confirm_password" name="confirm_password" 
+                    class="form-control" placeholder="Confirmez votre nouveau mot de passe">
+            </div>
+            
+            <button type="submit" class="btn btn-secondary">
+                <span>🔒</span>
+                Changer le mot de passe
+            </button>
+        </form>
+    </div>
+    
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>📊 Activité récente</h2>
+            <p>Vos dernières interactions</p>
+        </div>
+        
+        <div class="activity-list">
+            <div class="activity-item">
+                <div class="activity-icon">📝</div>
+                <div class="activity-content">
+                    <h4>Dernier message</h4>
+                    <p>{{ last_message_date if last_message_date else 'Aucun message' }}</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon">💰</div>
+                <div class="activity-content">
+                    <h4>Dernière demande de devis</h4>
+                    <p>{{ last_quote_date if last_quote_date else 'Aucune demande' }}</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon">👤</div>
+                <div class="activity-content">
+                    <h4>Date d'inscription</h4>
+                    <p>{{ user.date_creation or 'Non disponible' }}</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon">🔔</div>
+                <div class="activity-content">
+                    <h4>Notifications</h4>
+                    <p>Actives</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>⚙️ Préférences</h2>
+        <p>Personnalisez votre expérience</p>
+    </div>
+    
+    <div class="preferences-grid">
+        <div class="preference-item">
+            <div class="preference-header">
+                <h3>📧 Notifications par email</h3>
+                <p>Recevoir des emails pour les nouvelles messages</p>
+            </div>
+            <label class="switch">
+                <input type="checkbox" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="preference-item">
+            <div class="preference-header">
+                <h3>📱 Notifications SMS</h3>
+                <p>Recevoir des SMS pour les urgences</p>
+            </div>
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="preference-item">
+            <div class="preference-header">
+                <h3>🌙 Mode sombre</h3>
+                <p>Activer le thème sombre (bientôt disponible)</p>
+            </div>
+            <label class="switch">
+                <input type="checkbox" disabled>
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <div class="preference-item">
+            <div class="preference-header">
+                <h3>📊 Rapports mensuels</h3>
+                <p>Recevoir un résumé de votre activité</p>
+            </div>
+            <label class="switch">
+                <input type="checkbox">
+                <span class="slider"></span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>🗑️ Suppression du compte</h2>
+        <p>Danger - Cette action est irréversible</p>
+    </div>
+    
+    <div class="danger-zone">
+        <div class="danger-content">
+            <h3>⚠️ Supprimer mon compte</h3>
+            <p>La suppression de votre compte entraînera la perte permanente de toutes vos données.</p>
+            
+            <button class="btn btn-danger" onclick="confirmDelete()">
+                <span>🗑️</span>
+                Supprimer mon compte
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Form validation
+document.querySelector('.profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> Enregistrement...';
+    
+    try {
+        const response = await fetch('/profile', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            showNotification('Profil mis à jour avec succès !', 'success');
+        } else {
+            showNotification('Erreur lors de la mise à jour', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>💾</span> Enregistrer les modifications';
+    }
+});
+
+// Password change validation
+document.querySelector('.password-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const newPassword = formData.get('new_password');
+    const confirmPassword = formData.get('confirm_password');
+    
+    if (newPassword !== confirmPassword) {
+        showNotification('Les mots de passe ne correspondent pas', 'error');
+        return;
+    }
+    
+    if (newPassword.length < 8) {
+        showNotification('Le mot de passe doit contenir au moins 8 caractères', 'error');
+        return;
+    }
+    
+    const submitBtn = e.target.querySelector('button[type="submit"]');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> Mise à jour...';
+    
+    try {
+        const response = await fetch('/profile/change-password', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            showNotification('Mot de passe changé avec succès !', 'success');
+            e.target.reset();
+        } else {
+            showNotification('Erreur lors du changement de mot de passe', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<span>🔒</span> Changer le mot de passe';
+    }
+});
+
+// Phone formatting
+document.getElementById('telephone').addEventListener('input', (e) => {
+    let value = e.target.value.replace(/\s/g, '');
+    let formatted = '';
+    
+    for (let i = 0; i < value.length && i < 10; i++) {
+        if (i > 0 && i % 2 === 0) {
+            formatted += ' ';
+        }
+        formatted += value[i];
+    }
+    
+    e.target.value = formatted;
+});
+
+// Delete confirmation
+function confirmDelete() {
+    if (confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte ?\n\nCette action est irréversible et toutes vos données seront perdues.')) {
+        if (confirm('Dernière confirmation : Cette action ne peut pas être annulée.')) {
+            window.location.href = '/profile/delete';
+        }
+    }
+}
+
+// Preferences toggle
+document.querySelectorAll('.switch input').forEach(toggle => {
+    toggle.addEventListener('change', (e) => {
+        const preference = e.target.closest('.preference-item').querySelector('h3').textContent;
+        const status = e.target.checked ? 'activée' : 'désactivée';
+        
+        if (!e.target.disabled) {
+            showNotification(`Préférence "${preference}" ${status}`, 'info');
+        }
+    });
+});
+</script>
+{% endblock %}
+
+<style>
+.profile-header {
+    margin-bottom: 2rem;
+}
+
+.profile-info {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+}
+
+.profile-avatar {
+    flex-shrink: 0;
+}
+
+.avatar-circle {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--primary-blue);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    font-weight: 700;
+    box-shadow: var(--shadow-lg);
+}
+
+.profile-details {
+    flex: 1;
+}
+
+.profile-details h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.profile-details p {
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-item .stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+}
+
+.stat-item .stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.activity-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+}
+
+.activity-item:hover {
+    transform: translateX(5px);
+}
+
+.activity-icon {
+    font-size: 1.5rem;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    flex-shrink: 0;
+}
+
+.activity-content h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.activity-content p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.preferences-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.preference-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+}
+
+.preference-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.preference-header h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.preference-header p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+/* Toggle Switch */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--border-color);
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .slider {
+    background-color: var(--primary-blue);
+}
+
+input:checked + .slider:before {
+    transform: translateX(26px);
+}
+
+input:disabled + .slider {
+    background-color: var(--border-light);
+    cursor: not-allowed;
+}
+
+.danger-zone {
+    background: rgba(239, 68, 68, 0.05);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius);
+    padding: 2rem;
+}
+
+.danger-content h3 {
+    color: var(--danger);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.danger-content p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+@media (max-width: 768px) {
+    .profile-info {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+    
+    .profile-stats {
+        justify-content: center;
+    }
+    
+    .preferences-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .preference-item {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+}
+</style>

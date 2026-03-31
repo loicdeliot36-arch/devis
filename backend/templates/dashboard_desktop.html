@@ -1,0 +1,630 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Tableau de bord - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="dashboard-header">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>👋 Bonjour {{ user.prenom }} !</h2>
+            <p>Bienvenue dans votre espace personnel</p>
+        </div>
+        
+        <div class="welcome-stats">
+            <div class="welcome-stat">
+                <div class="welcome-stat-icon">📅</div>
+                <div class="welcome-stat-content">
+                    <h3>{{ current_date }}</h3>
+                    <p>Aujourd'hui</p>
+                </div>
+            </div>
+            
+            <div class="welcome-stat">
+                <div class="welcome-stat-icon">⏰</div>
+                <div class="welcome-stat-content">
+                    <h3>{{ current_time }}</h3>
+                    <p>Heure actuelle</p>
+                </div>
+            </div>
+            
+            <div class="welcome-stat">
+                <div class="welcome-stat-icon">🎯</div>
+                <div class="welcome-stat-content">
+                    <h3>{{ user.role|title }}</h3>
+                    <p>Votre rôle</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="stats-grid">
+    <div class="stat-card fade-in">
+        <div class="stat-icon blue">📬</div>
+        <div class="stat-number">{{ total_messages }}</div>
+        <div class="stat-label">Messages total</div>
+    </div>
+    
+    <div class="stat-card fade-in">
+        <div class="stat-icon green">✅</div>
+        <div class="stat-number">{{ treated_messages }}</div>
+        <div class="stat-label">Messages traités</div>
+    </div>
+    
+    <div class="stat-card fade-in">
+        <div class="stat-icon orange">⏳</div>
+        <div class="stat-number">{{ pending_messages }}</div>
+        <div class="stat-label">En attente</div>
+    </div>
+    
+    <div class="stat-card fade-in">
+        <div class="stat-icon red">📊</div>
+        <div class="stat-number">{{ treatment_rate }}%</div>
+        <div class="stat-label">Taux de traitement</div>
+    </div>
+</div>
+
+{% if user.role == 'admin' %}
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>📈 Activité récente</h2>
+            <p>Vue d'ensemble des dernières 24h</p>
+        </div>
+        
+        <div class="activity-chart">
+            <div class="chart-bars">
+                <div class="chart-bar" style="height: 60%">
+                    <span>Lun</span>
+                </div>
+                <div class="chart-bar" style="height: 80%">
+                    <span>Mar</span>
+                </div>
+                <div class="chart-bar" style="height: 45%">
+                    <span>Mer</span>
+                </div>
+                <div class="chart-bar" style="height: 90%">
+                    <span>Jeu</span>
+                </div>
+                <div class="chart-bar" style="height: 70%">
+                    <span>Ven</span>
+                </div>
+                <div class="chart-bar" style="height: 30%">
+                    <span>Sam</span>
+                </div>
+                <div class="chart-bar" style="height: 20%">
+                    <span>Dim</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="activity-summary">
+            <div class="summary-item">
+                <h4>Aujourd'hui</h4>
+                <p>{{ today_messages }} messages</p>
+            </div>
+            <div class="summary-item">
+                <h4>Cette semaine</h4>
+                <p>{{ week_messages }} messages</p>
+            </div>
+            <div class="summary-item">
+                <h4>Ce mois</h4>
+                <p>{{ month_messages }} messages</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>🔔 Notifications</h2>
+            <p>Dernières alertes système</p>
+        </div>
+        
+        <div class="notifications-list">
+            <div class="notification-item">
+                <div class="notification-icon success">✅</div>
+                <div class="notification-content">
+                    <h4>Synchronisation réussie</h4>
+                    <p>{{ last_sync_date }} - {{ synced_count }} emails synchronisés</p>
+                </div>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-icon info">📧</div>
+                <div class="notification-content">
+                    <h4>Nouveau message reçu</h4>
+                    <p>{{ last_message_date }} - {{ last_message_sender }}</p>
+                </div>
+            </div>
+            
+            <div class="notification-item">
+                <div class="notification-icon warning">⚠️</div>
+                <div class="notification-content">
+                    <h4>Rappel de traitement</h4>
+                    <p>{{ pending_messages }} messages en attente de réponse</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>📋 Actions rapides</h2>
+        <p>Raccourcis vers les fonctionnalités principales</p>
+    </div>
+    
+    <div class="quick-actions">
+        <a href="/admin/messages" class="action-card">
+            <div class="action-icon">📬</div>
+            <h3>Gérer les messages</h3>
+            <p>{{ pending_messages }} en attente</p>
+        </a>
+        
+        <a href="/admin/users" class="action-card">
+            <div class="action-icon">👥</div>
+            <h3>Gérer les utilisateurs</h3>
+            <p>{{ total_users }} utilisateurs</p>
+        </a>
+        
+        <a href="/admin/sync" class="action-card">
+            <div class="action-icon">🔄</div>
+            <h3>Synchroniser les emails</h3>
+            <p>Dernière: {{ last_sync_date }}</p>
+        </a>
+        
+        <a href="/contact" class="action-card">
+            <div class="action-icon">📝</div>
+            <h3>Nouveau message</h3>
+            <p>Envoyer une communication</p>
+        </a>
+        
+        <a href="/profile" class="action-card">
+            <div class="action-icon">👤</div>
+            <h3>Mon profil</h3>
+            <p>Mettre à jour mes infos</p>
+        </a>
+        
+        <a href="/logout" class="action-card">
+            <div class="action-icon">🚪</div>
+            <h3>Déconnexion</h3>
+            <p>Quitter l'interface</p>
+        </a>
+    </div>
+</div>
+{% else %}
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>📊 Mes activités</h2>
+            <p>Vos interactions avec nos services</p>
+        </div>
+        
+        <div class="user-activities">
+            <div class="activity-item">
+                <div class="activity-icon">📝</div>
+                <div class="activity-content">
+                    <h4>Messages envoyés</h4>
+                    <p>{{ user_messages|length if user_messages else 0 }}</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon">💰</div>
+                <div class="activity-content">
+                    <h4>Devis demandés</h4>
+                    <p>{{ user_quotes|length if user_quotes else 0 }}</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon">📅</div>
+                <div class="activity-content">
+                    <h4>Dernier contact</h4>
+                    <p>{{ last_contact_date if last_contact_date else 'Aucun' }}</p>
+                </div>
+            </div>
+            
+            <div class="activity-item">
+                <div class="activity-icon">🎯</div>
+                <div class="activity-content">
+                    <h4>Statut du compte</h4>
+                    <p>Actif</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>🚀 Services rapides</h2>
+            <p>Accès rapide à nos fonctionnalités</p>
+        </div>
+        
+        <div class="user-actions">
+            <a href="/contact" class="btn btn-primary btn-lg">
+                <span>📝</span>
+                Envoyer un message
+            </a>
+            
+            <a href="/contact" class="btn btn-success btn-lg">
+                <span>💰</span>
+                Demander un devis
+            </a>
+            
+            <a href="/profile" class="btn btn-secondary btn-lg">
+                <span>👤</span>
+                Mettre à jour mon profil
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>📞 Besoin d'aide ?</h2>
+        <p>Nous sommes là pour vous assister</p>
+    </div>
+    
+    <div class="help-section">
+        <div class="help-item">
+            <div class="help-icon">📧</div>
+            <div class="help-content">
+                <h3>Support par email</h3>
+                <p>Contactez-nous à nathanratte702@gmx.fr</p>
+                <a href="mailto:nathanratte702@gmx.fr" class="btn btn-outline">Envoyer un email</a>
+            </div>
+        </div>
+        
+        <div class="help-item">
+            <div class="help-icon">📱</div>
+            <div class="help-content">
+                <h3>Support téléphonique</h3>
+                <p>Appelez-nous au 07 59 76 19 98</p>
+                <a href="tel:0759761998" class="btn btn-outline">Appeler maintenant</a>
+            </div>
+        </div>
+        
+        <div class="help-item">
+            <div class="help-icon">📚</div>
+            <div class="help-content">
+                <h3>FAQ</h3>
+                <p>Consultez nos questions fréquentes</p>
+                <a href="/contact#faq" class="btn btn-outline">Voir la FAQ</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Animation des statistiques
+document.addEventListener('DOMContentLoaded', () => {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    
+    const animateValue = (element, start, end, duration) => {
+        const startTimestamp = Date.now();
+        const step = () => {
+            const timestamp = Date.now();
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = element.textContent.includes('%') ? value + '%' : value;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+    
+    statNumbers.forEach(stat => {
+        const text = stat.textContent;
+        if (text.includes('%')) {
+            animateValue(stat, 0, parseInt(text), 2000);
+        } else {
+            animateValue(stat, 0, parseInt(text), 2000);
+        }
+    });
+});
+
+// Mise à jour de l'heure
+function updateTime() {
+    const now = new Date();
+    const timeElement = document.querySelector('.welcome-stat:nth-child(2) h3');
+    if (timeElement) {
+        timeElement.textContent = now.toLocaleTimeString('fr-FR', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+    }
+}
+
+// Mise à jour toutes les secondes
+setInterval(updateTime, 1000);
+updateTime();
+</script>
+{% endblock %}
+
+<style>
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+.welcome-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.welcome-stat {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    transition: all 0.3s ease;
+}
+
+.welcome-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.welcome-stat-icon {
+    font-size: 2.5rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+    border-radius: var(--radius);
+    flex-shrink: 0;
+}
+
+.welcome-stat-content h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.welcome-stat-content p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.activity-chart {
+    margin-bottom: 2rem;
+}
+
+.chart-bars {
+    display: flex;
+    align-items: end;
+    justify-content: space-between;
+    height: 200px;
+    padding: 1rem 0;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.chart-bar {
+    flex: 1;
+    background: var(--primary-blue);
+    border-radius: var(--radius) var(--radius) 0 0;
+    position: relative;
+    margin: 0 0.25rem;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.chart-bar:hover {
+    background: var(--primary-dark);
+    transform: translateY(-5px);
+}
+
+.chart-bar span {
+    position: absolute;
+    bottom: -25px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.activity-summary {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.summary-item {
+    text-align: center;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.summary-item h4 {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.25rem;
+}
+
+.summary-item p {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.notifications-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.notification-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+}
+
+.notification-item:hover {
+    transform: translateX(5px);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.notification-icon.success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.notification-icon.info {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+}
+
+.notification-icon.warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+}
+
+.notification-content h4 {
+    font-size: 0.95rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.notification-content p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.quick-actions {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.action-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color);
+}
+
+.action-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-blue);
+}
+
+.action-icon {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+
+.action-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.action-card p {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.user-activities {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.user-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.help-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+}
+
+.help-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+}
+
+.help-icon {
+    font-size: 3rem;
+}
+
+.help-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.help-content p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .welcome-stats {
+        grid-template-columns: 1fr;
+    }
+    
+    .activity-summary {
+        grid-template-columns: 1fr;
+    }
+    
+    .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .help-section {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-bars {
+        height: 150px;
+    }
+}
+</style>

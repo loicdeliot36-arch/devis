@@ -1,0 +1,886 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Contact - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="contact-hero">
+    <div class="hero-content">
+        <h1>📞 Contactez-nous</h1>
+        <p>Nous sommes à votre disposition pour répondre à toutes vos questions</p>
+        <div class="contact-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ total_messages or 0 }}</span>
+                <span class="stat-label">Messages traités</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ treatment_rate or 0 }}%</span>
+                <span class="stat-label">Taux de réponse</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">24h</span>
+                <span class="stat-label">Délai moyen</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="contact-container">
+    <div class="contact-form-section">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h2>📝 Envoyez-nous un message</h2>
+                <p>Remplissez le formulaire ci-dessous et nous vous répondrons rapidement</p>
+            </div>
+            
+            {% if user %}
+            <div class="alert alert-info">
+                <span>👋</span>
+                <div>
+                    <strong>Bonjour {{ user.prenom }} !</strong>
+                    <p>Vos informations sont pré-remplies. Modifiez-les si nécessaire.</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <form method="post" action="/api/contact" class="contact-form" id="contactForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nom">Nom complet *</label>
+                        <input type="text" id="nom" name="nom" required class="form-control" 
+                            {% if user %}value="{{ user.nom or '' }}"{% endif %}
+                            placeholder="Entrez votre nom complet">
+                        <span class="form-icon">👤</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required class="form-control" 
+                            {% if user %}value="{{ user.email or '' }}" readonly{% endif %}
+                            placeholder="votre.email@example.com">
+                        <span class="form-icon">📧</span>
+                        {% if user %}<small>Email pré-rempli depuis votre compte</small>{% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telephone">Téléphone</label>
+                    <input type="tel" id="telephone" name="telephone" class="form-control" 
+                        {% if user %}value="{{ user.telephone or '' }}"{% endif %}
+                        placeholder="06 12 34 56 78">
+                    <span class="form-icon">📱</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sujet">Sujet *</label>
+                    <select id="sujet" name="sujet" required class="form-control">
+                        <option value="">Choisissez un sujet</option>
+                        <option value="demande_devis">📋 Demande de devis</option>
+                        <option value="information">ℹ️ Demande d'information</option>
+                        <option value="rendez_vous">📅 Prise de rendez-vous</option>
+                        <option value="reclamation">⚠️ Réclamation</option>
+                        <option value="autre">📝 Autre</option>
+                    </select>
+                    <span class="form-icon">📌</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" required class="form-control" rows="6" 
+                        placeholder="Décrivez votre demande en détail..."></textarea>
+                    <span class="form-icon">💬</span>
+                    <small id="charCount">0 caractères</small>
+                </div>
+                
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="urgent" name="urgent">
+                        <span>🚨 Demande urgente</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="newsletter" name="newsletter" checked>
+                        <span>📬 Je souhaite recevoir la newsletter</span>
+                    </label>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <span>🔄</span>
+                        Réinitialiser
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <span>📤</span>
+                        Envoyer le message
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="contact-info-section">
+        <div class="info-card fade-in">
+            <h3>🏠 Nos coordonnées</h3>
+            <div class="contact-details">
+                <div class="contact-item">
+                    <span class="contact-icon">📍</span>
+                    <div>
+                        <strong>Adresse</strong>
+                        <p>123 Avenue des Services<br>75001 Paris, France</p>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <span class="contact-icon">📞</span>
+                    <div>
+                        <strong>Téléphone</strong>
+                        <p>01 23 45 67 89</p>
+                        <small>Lun-Ven: 8h-18h, Sam: 9h-12h</small>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <span class="contact-icon">📧</span>
+                    <div>
+                        <strong>Email</strong>
+                        <p>contact@rdmenage.fr</p>
+                        <small>Réponse sous 24h</small>
+                    </div>
+                </div>
+                
+                <div class="contact-item">
+                    <span class="contact-icon">🌐</span>
+                    <div>
+                        <strong>Site web</strong>
+                        <p>www.rdmenage.fr</p>
+                        <small>Disponible 24/7</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card fade-in">
+            <h3>⏰ Nos horaires</h3>
+            <div class="schedule">
+                <div class="schedule-day">
+                    <span>Lundi - Vendredi</span>
+                    <span>8h - 18h</span>
+                </div>
+                <div class="schedule-day">
+                    <span>Samedi</span>
+                    <span>9h - 12h</span>
+                </div>
+                <div class="schedule-day">
+                    <span>Dimanche</span>
+                    <span>Fermé</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card fade-in">
+            <h3>🚀 Services rapides</h3>
+            <div class="quick-services">
+                <div class="service-item">
+                    <span class="service-icon">📋</span>
+                    <div>
+                        <strong>Devis en ligne</strong>
+                        <p>Obtenez un devis instantané</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">Demander</button>
+                </div>
+                
+                <div class="service-item">
+                    <span class="service-icon">📅</span>
+                    <div>
+                        <strong>Rendez-vous</strong>
+                        <p>Prenez rendez-vous en ligne</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">Réserver</button>
+                </div>
+                
+                <div class="service-item">
+                    <span class="service-icon">💬</span>
+                    <div>
+                        <strong>Chat en direct</strong>
+                        <p>Discutez avec un conseiller</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">Chatter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✅ Message envoyé !</h3>
+            <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.</p>
+            <div class="confirmation-details">
+                <p><strong>Référence :</strong> #<span id="messageRef"></span></p>
+                <p><strong>Délai de réponse :</strong> Sous 24h</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeConfirmModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Gestion du formulaire de contact
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> Envoi en cours...';
+    
+    try {
+        const formData = new FormData(e.target);
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            // Générer une référence de message
+            const messageRef = 'MSG' + Date.now().toString().slice(-6);
+            document.getElementById('messageRef').textContent = messageRef;
+            
+            // Afficher la modal de confirmation
+            document.getElementById('confirmModal').style.display = 'block';
+            
+            // Réinitialiser le formulaire
+            e.target.reset();
+            updateCharCount();
+            
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Erreur lors de l\'envoi', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+// Compteur de caractères
+function updateCharCount() {
+    const message = document.getElementById('message').value;
+    const charCount = document.getElementById('charCount');
+    charCount.textContent = message.length + ' caractères';
+    
+    if (message.length > 500) {
+        charCount.style.color = 'var(--accent-orange)';
+    } else {
+        charCount.style.color = 'var(--text-secondary)';
+    }
+}
+
+document.getElementById('message').addEventListener('input', updateCharCount);
+
+// Réinitialiser le formulaire
+function resetForm() {
+    document.getElementById('contactForm').reset();
+    updateCharCount();
+    showNotification('Formulaire réinitialisé', 'info');
+}
+
+// Modal de confirmation
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+// Fermer les modals au clic extérieur
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
+// Formatage du téléphone
+document.getElementById('telephone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formatted = '';
+    
+    if (value.length > 0) {
+        if (value.length <= 2) {
+            formatted = value;
+        } else if (value.length <= 4) {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2);
+        } else if (value.length <= 6) {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4);
+        } else {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4, 6) + ' ' + value.slice(6, 8);
+        }
+    }
+    
+    e.target.value = formatted;
+});
+
+// Validation du sujet
+document.getElementById('sujet').addEventListener('change', function(e) {
+    const messageField = document.getElementById('message');
+    const sujet = e.target.value;
+    
+    // Suggestions de messages selon le sujet
+    const suggestions = {
+        'demande_devis': 'Je souhaiterais obtenir un devis pour des services de ménage. Voici mes besoins :',
+        'information': 'J\'aimerais obtenir plus d\'informations sur vos services de ménage.',
+        'rendez_vous': 'Je souhaiterais prendre rendez-vous pour une évaluation de mes besoins.',
+        'reclamation': 'Je souhaite signaler un problème concernant un service récent.',
+        'autre': ''
+    };
+    
+    if (suggestions[sujet] && !messageField.value) {
+        messageField.value = suggestions[sujet];
+        updateCharCount();
+    }
+});
+
+// Animation des statistiques
+function animateStats() {
+    const stats = document.querySelectorAll('.stat-number');
+    stats.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.floor(current);
+        }, 30);
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    updateCharCount();
+    animateStats();
+});
+</script>
+
+<style>
+.contact-hero {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+    margin-bottom: 3rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+    color: #ffffff;
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.95;
+    color: #f1f5f9;
+}
+
+.contact-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2rem;
+    border-radius: 16px;
+    backdrop-filter: blur(10px);
+}
+
+.stat-item {
+    text-align: center;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #ffffff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.9;
+    color: #e2e8f0;
+    font-weight: 500;
+}
+
+.contact-container {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+    padding: 0 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 0.875rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    background: #ffffff;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-icon {
+    position: absolute;
+    right: 1rem;
+    top: 2.5rem;
+    font-size: 1.2rem;
+    color: #6b7280;
+}
+
+.form-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    color: #374151;
+    font-weight: 500;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.checkbox-label:hover {
+    background-color: #f3f4f6;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    margin: 0;
+    accent-color: #3b82f6;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: end;
+    margin-top: 2rem;
+}
+
+.btn {
+    padding: 0.75rem 1.5rem;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+.contact-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.info-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.info-card h3 {
+    color: #1f2937;
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    transition: background-color 0.2s ease;
+}
+
+.contact-item:hover {
+    background: #f3f4f6;
+}
+
+.contact-icon {
+    font-size: 1.5rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.contact-item strong {
+    color: #1f2937;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.contact-item p {
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.contact-item small {
+    color: #9ca3af;
+    font-size: 0.75rem;
+}
+
+.schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.schedule-day {
+    display: flex;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.schedule-day:first-child {
+    font-weight: 600;
+    color: #1f2937;
+    background: #eff6ff;
+}
+
+.quick-services {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.service-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    transition: all 0.3s ease;
+}
+
+.service-item:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+}
+
+.service-icon {
+    font-size: 1.5rem;
+    color: #3b82f6;
+    margin-right: 1rem;
+}
+
+.service-item div {
+    flex: 1;
+}
+
+.service-item strong {
+    color: #1f2937;
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 600;
+}
+
+.service-item p {
+    color: #6b7280;
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+}
+
+.btn-outline:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.alert {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.alert-info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+
+.card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.card-header h2 {
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.card-header p {
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+#charCount {
+    position: absolute;
+    right: 1rem;
+    bottom: -1.5rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+textarea.form-control {
+    resize: vertical;
+    min-height: 120px;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+    background-color: #f3f4f6;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.confirmation-details {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 8px;
+    margin-top: 1rem;
+    border-left: 4px solid #10b981;
+}
+
+.confirmation-details p {
+    margin: 0.5rem 0;
+    color: #374151;
+    font-weight: 500;
+}
+
+.modal-footer {
+    padding: 2rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .contact-hero {
+        padding: 2rem 0;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .contact-stats {
+        flex-direction: column;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .contact-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+        padding: 0 1rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+    
+    .modal-content {
+        margin: 20% auto;
+        width: 95%;
+    }
+}
+</style>
+{% endblock %}

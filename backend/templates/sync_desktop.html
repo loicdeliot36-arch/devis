@@ -1,0 +1,1101 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Synchronisation - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="sync-hero">
+    <div class="hero-content">
+        <h1>🔄 Synchronisation</h1>
+        <p>Centre de synchronisation des données et des emails</p>
+    </div>
+</div>
+
+<div class="sync-container">
+    <div class="sync-section">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h2>📊 Statistiques de synchronisation</h2>
+                <p>Vue d'ensemble de l'état du système</p>
+            </div>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📧</div>
+                    <div class="stat-info">
+                        <h3>{{ total_messages }}</h3>
+                        <p>Messages total</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">✅</div>
+                    <div class="stat-info">
+                        <h3>{{ treated_messages }}</h3>
+                        <p>Messages traités</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">⏳</div>
+                    <div class="stat-info">
+                        <h3>{{ pending_messages }}</h3>
+                        <p>En attente</p>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="stat-icon">👥</div>
+                    <div class="stat-info">
+                        <h3>{{ total_users }}</h3>
+                        <p>Utilisateurs</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sync-section">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h2>🚀 Actions rapides</h2>
+                <p>Outils de gestion et de synchronisation</p>
+            </div>
+            
+            <div class="quick-actions-grid">
+                <div class="action-card primary" onclick="testEmail()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">📧</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Test Email SMTP</h3>
+                        <p>Vérifier la configuration et l'envoi d'emails</p>
+                        <div class="action-status" id="emailStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Non testé</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card secondary" onclick="syncMessages()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">🔄</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Synchroniser Messages</h3>
+                        <p>Resynchroniser tous les messages non envoyés</p>
+                        <div class="action-status" id="syncStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">En attente</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card secondary" onclick="refreshStats()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">📊</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Actualiser Statistiques</h3>
+                        <p>Mettre à jour tous les compteurs du système</p>
+                        <div class="action-status" id="statsStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Prêt</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card warning" onclick="cleanupDatabase()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">🧹</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Nettoyer Base</h3>
+                        <p>Optimiser et nettoyer la base de données</p>
+                        <div class="action-status" id="cleanupStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Sécurisé</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card info" onclick="backupDatabase()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">💾</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Sauvegarder Base</h3>
+                        <p>Créer une sauvegarde complète de la base</p>
+                        <div class="action-status" id="backupStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Disponible</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card success" onclick="exportData()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">📤</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Exporter Données</h3>
+                        <p>Exporter toutes les données au format CSV/JSON</p>
+                        <div class="action-status" id="exportStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Prêt</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card special" onclick="optimizeDatabase()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">⚡</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Optimiser Base</h3>
+                        <p>Analyser et optimiser les performances</p>
+                        <div class="action-status" id="optimizeStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Analyse</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="action-card special" onclick="checkIntegrity()">
+                    <div class="action-visual">
+                        <div class="action-icon-large">🛡️</div>
+                        <div class="action-pulse"></div>
+                    </div>
+                    <div class="action-content">
+                        <h3>Vérifier Intégrité</h3>
+                        <p>Contrôler l'intégrité des données</p>
+                        <div class="action-status" id="integrityStatus">
+                            <div class="status-indicator idle">
+                                <div class="status-dot"></div>
+                            </div>
+                            <span class="status-text">Sécurisé</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="action-progress" id="globalProgress" style="display: none;">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">Opération en cours...</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="sync-section">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h2>📝 Journal de synchronisation</h2>
+                <p>Historique des dernières opérations</p>
+            </div>
+            
+            <div class="log-container">
+                <div class="log-item">
+                    <div class="log-time">{{ current_time }}</div>
+                    <div class="log-message">
+                        <span class="log-status success">✅</span>
+                        Système initialisé avec succès
+                    </div>
+                </div>
+                
+                <div class="log-item">
+                    <div class="log-time">{{ current_time }}</div>
+                    <div class="log-message">
+                        <span class="log-status info">ℹ️</span>
+                        Base de données connectée
+                    </div>
+                </div>
+                
+                <div class="log-item">
+                    <div class="log-time">{{ current_time }}</div>
+                    <div class="log-message">
+                        <span class="log-status success">✅</span>
+                        Configuration SMTP chargée
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de résultat -->
+<div id="resultModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="resultTitle">Résultat</h3>
+            <button class="modal-close" onclick="closeResultModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div id="resultContent">
+                <p>Opération en cours...</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeResultModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Test de configuration email
+async function testEmail() {
+    showProgress('Test Email SMTP', 'Envoi d\'email de test en cours...');
+    updateStatus('emailStatus', 'loading', 'Test en cours');
+    
+    try {
+        const response = await fetch('/api/test-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatus('emailStatus', 'success', 'Succès');
+            showResult('✅ Email envoyé avec succès', `Email de test envoyé à ${result.recipient}`, 'success');
+        } else {
+            updateStatus('emailStatus', 'error', 'Échec');
+            showResult('❌ Échec de l\'email', result.error || 'Erreur inconnue', 'error');
+        }
+    } catch (error) {
+        updateStatus('emailStatus', 'error', 'Erreur');
+        showResult('❌ Erreur de connexion', error.message, 'error');
+    } finally {
+        hideProgress();
+    }
+}
+
+// Synchronisation des messages
+async function syncMessages() {
+    showProgress('Synchronisation Messages', 'Resynchronisation des messages en cours...');
+    updateStatus('syncStatus', 'loading', 'Sync...');
+    
+    try {
+        const response = await fetch('/api/sync-messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatus('syncStatus', 'success', 'Terminé');
+            showResult('✅ Synchronisation réussie', `${result.synced_count} messages resynchronisés`, 'success');
+            refreshStats();
+        } else {
+            updateStatus('syncStatus', 'error', 'Échec');
+            showResult('❌ Échec synchronisation', result.error || 'Erreur inconnue', 'error');
+        }
+    } catch (error) {
+        updateStatus('syncStatus', 'error', 'Erreur');
+        showResult('❌ Erreur de connexion', error.message, 'error');
+    } finally {
+        hideProgress();
+    }
+}
+
+// Actualisation des statistiques
+async function refreshStats() {
+    showProgress('Actualisation Stats', 'Mise à jour des statistiques...');
+    updateStatus('statsStatus', 'loading', 'Actualisation...');
+    
+    try {
+        const response = await fetch('/api/refresh-stats', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatus('statsStatus', 'success', 'Actualisé');
+            showResult('✅ Statistiques actualisées', 'Les compteurs ont été mis à jour', 'success');
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            updateStatus('statsStatus', 'error', 'Échec');
+            showResult('❌ Échec actualisation', result.error || 'Erreur inconnue', 'error');
+        }
+    } catch (error) {
+        updateStatus('statsStatus', 'error', 'Erreur');
+        showResult('❌ Erreur de connexion', error.message, 'error');
+    } finally {
+        hideProgress();
+    }
+}
+
+// Nettoyage de la base de données
+async function cleanupDatabase() {
+    if (!confirm('Êtes-vous sûr de vouloir nettoyer la base de données ? Cette action est irréversible.')) {
+        return;
+    }
+    
+    showProgress('Nettoyage Base', 'Nettoyage de la base de données en cours...');
+    updateStatus('cleanupStatus', 'loading', 'Nettoyage...');
+    
+    try {
+        const response = await fetch('/api/cleanup-database', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatus('cleanupStatus', 'success', 'Propre');
+            showResult('✅ Nettoyage réussi', `${result.cleaned_count} enregistrements nettoyés`, 'success');
+            refreshStats();
+        } else {
+            updateStatus('cleanupStatus', 'error', 'Échec');
+            showResult('❌ Échec nettoyage', result.error || 'Erreur inconnue', 'error');
+        }
+    } catch (error) {
+        updateStatus('cleanupStatus', 'error', 'Erreur');
+        showResult('❌ Erreur de connexion', error.message, 'error');
+    } finally {
+        hideProgress();
+    }
+}
+
+// Optimisation de la base de données
+async function optimizeDatabase() {
+    if (!confirm('Êtes-vous sûr de vouloir optimiser la base de données ? Cette action peut prendre quelques minutes.')) {
+        return;
+    }
+    
+    showProgress('Optimisation Base', 'Analyse et optimisation en cours...');
+    updateStatus('optimizeStatus', 'loading', 'Analyse...');
+    
+    try {
+        const response = await fetch('/api/optimize-database', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatus('optimizeStatus', 'success', 'Optimisé');
+            showResult('✅ Optimisation réussie', `${result.optimizations.length} optimisations appliquées`, 'success');
+            refreshStats();
+        } else {
+            updateStatus('optimizeStatus', 'error', 'Échec');
+            showResult('❌ Échec optimisation', result.error || 'Erreur inconnue', 'error');
+        }
+    } catch (error) {
+        updateStatus('optimizeStatus', 'error', 'Erreur');
+        showResult('❌ Erreur de connexion', error.message, 'error');
+    } finally {
+        hideProgress();
+    }
+}
+
+// Vérification de l'intégrité
+async function checkIntegrity() {
+    showProgress('Vérification Intégrité', 'Contrôle de l\'intégrité des données...');
+    updateStatus('integrityStatus', 'loading', 'Vérification...');
+    
+    try {
+        const response = await fetch('/api/check-integrity', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            updateStatus('integrityStatus', 'success', 'Intégre');
+            showResult('✅ Intégrité vérifiée', `Base de données : ${result.integrity_status}`, 'success');
+        } else {
+            updateStatus('integrityStatus', 'error', 'Erreur');
+            showResult('❌ Erreur d\'intégrité', result.error || 'Erreur inconnue', 'error');
+        }
+    } catch (error) {
+        updateStatus('integrityStatus', 'error', 'Erreur');
+        showResult('❌ Erreur de connexion', error.message, 'error');
+    } finally {
+        hideProgress();
+    }
+}
+
+// Mise à jour du statut d'une action
+function updateStatus(statusId, state, text) {
+    const statusElement = document.getElementById(statusId);
+    const indicator = statusElement.querySelector('.status-indicator');
+    const dot = statusElement.querySelector('.status-dot');
+    const textElement = statusElement.querySelector('.status-text');
+    
+    // Retirer toutes les classes
+    indicator.className = 'status-indicator';
+    
+    // Ajouter la classe correspondante
+    switch(state) {
+        case 'loading':
+            indicator.classList.add('loading');
+            dot.style.background = '#3b82f6';
+            dot.style.boxShadow = '0 0 8px rgba(59, 130, 246, 0.6)';
+            break;
+        case 'success':
+            indicator.classList.add('success');
+            dot.style.background = '#10b981';
+            dot.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.6)';
+            break;
+        case 'error':
+            indicator.classList.add('error');
+            dot.style.background = '#ef4444';
+            dot.style.boxShadow = '0 0 8px rgba(239, 68, 68, 0.6)';
+            break;
+        default:
+            indicator.classList.add('idle');
+            dot.style.background = '#6b7280';
+            dot.style.boxShadow = '0 0 8px rgba(107, 114, 128, 0.3)';
+    }
+    
+    textElement.textContent = text;
+}
+
+// Afficher la barre de progression
+function showProgress(title, message) {
+    const progressElement = document.getElementById('globalProgress');
+    const progressText = document.getElementById('progressText');
+    const progressFill = document.getElementById('progressFill');
+    
+    progressElement.style.display = 'block';
+    progressText.textContent = message;
+    progressFill.style.width = '0%';
+    
+    // Animation de la barre
+    let width = 0;
+    const interval = setInterval(() => {
+        width += Math.random() * 30;
+        if (width >= 90) {
+            width = 90;
+            clearInterval(interval);
+        }
+        progressFill.style.width = width + '%';
+    }, 200);
+}
+
+// Cacher la barre de progression
+function hideProgress() {
+    const progressElement = document.getElementById('globalProgress');
+    const progressFill = document.getElementById('progressFill');
+    
+    setTimeout(() => {
+        progressFill.style.width = '100%';
+        setTimeout(() => {
+            progressElement.style.display = 'none';
+            progressFill.style.width = '0%';
+        }, 500);
+    }, 300);
+}
+
+// Affichage des résultats
+function showResult(title, message, type = 'info') {
+    document.getElementById('resultTitle').textContent = title;
+    document.getElementById('resultContent').innerHTML = `
+        <div class="result-item ${type}">
+            <p>${message}</p>
+        </div>
+    `;
+    document.getElementById('resultModal').style.display = 'block';
+}
+
+// Fermeture de la modal
+function closeResultModal() {
+    document.getElementById('resultModal').style.display = 'none';
+}
+
+// Fermeture au clic extérieur
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
+// Animation des statistiques
+function animateStats() {
+    const statNumbers = document.querySelectorAll('.stat-card h3');
+    statNumbers.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.floor(current);
+        }, 30);
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    animateStats();
+});
+</script>
+
+<style>
+.sync-hero {
+    background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    margin-bottom: 0;
+    opacity: 0.95;
+    color: #f1f5f9;
+}
+
+.sync-container {
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+}
+
+.sync-section {
+    height: 100%;
+}
+
+.card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 2rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+}
+
+.card-header h2 {
+    color: #1f2937;
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.card-header p {
+    color: #6b7280;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    background: #f3f4f6;
+    transform: translateX(4px);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    color: #3b82f6;
+    flex-shrink: 0;
+}
+
+.stat-info h3 {
+    color: #1f2937;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.stat-info p {
+    color: #6b7280;
+    margin: 0.25rem 0 0 0;
+    font-size: 0.875rem;
+}
+
+.quick-actions-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.action-card {
+    background: #ffffff;
+    border: 2px solid #e5e7eb;
+    border-radius: 16px;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.action-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+.action-card.primary {
+    border-color: #3b82f6;
+    background: linear-gradient(135deg, #eff6ff 0%, #ffffff 100%);
+}
+
+.action-card.secondary {
+    border-color: #6b7280;
+    background: linear-gradient(135deg, #f3f4f6 0%, #ffffff 100%);
+}
+
+.action-card.warning {
+    border-color: #f59e0b;
+    background: linear-gradient(135deg, #fef3c7 0%, #ffffff 100%);
+}
+
+.action-card.info {
+    border-color: #06b6d4;
+    background: linear-gradient(135deg, #dbeafe 0%, #ffffff 100%);
+}
+
+.action-card.success {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #d1fae5 0%, #ffffff 100%);
+}
+
+.action-card.special {
+    border-color: #8b5cf6;
+    background: linear-gradient(135deg, #ede9fe 0%, #ffffff 100%);
+}
+
+.action-visual {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+    position: relative;
+}
+
+.action-icon-large {
+    font-size: 3rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+    transition: all 0.3s ease;
+}
+
+.action-card:hover .action-icon-large {
+    transform: scale(1.1) rotate(5deg);
+}
+
+.action-pulse {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.1) 0%, transparent 70%);
+    animation: pulse 2s infinite;
+}
+
+.action-card:hover .action-pulse {
+    animation: pulse 1s infinite;
+}
+
+.action-content h3 {
+    color: #1f2937;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0 0 0.75rem 0;
+}
+
+.action-content p {
+    color: #6b7280;
+    margin: 0 0 1.5rem 0;
+    line-height: 1.6;
+    font-size: 0.9rem;
+}
+
+.action-status {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+}
+
+.status-indicator {
+    position: relative;
+}
+
+.status-dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #6b7280;
+    box-shadow: 0 0 8px rgba(107, 114, 128, 0.3);
+    transition: all 0.3s ease;
+}
+
+.status-indicator.loading .status-dot {
+    background: #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+    animation: pulse-dot 1.5s infinite;
+}
+
+.status-indicator.success .status-dot {
+    background: #10b981;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6);
+}
+
+.status-indicator.error .status-dot {
+    background: #ef4444;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+    animation: shake 0.5s;
+}
+
+.status-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+}
+
+@keyframes pulse {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 0.8;
+    }
+    50% { 
+        transform: scale(1.1);
+        opacity: 0.4;
+    }
+}
+
+@keyframes pulse-dot {
+    0%, 100% { 
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% { 
+        transform: scale(1.2);
+        opacity: 0.7;
+    }
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-4px); }
+    75% { transform: translateX(4px); }
+}
+
+.action-progress {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: #ffffff;
+    border: 2px solid #3b82f6;
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+    min-width: 300px;
+    display: none;
+}
+
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: #e5e7eb;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.75rem;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #2563eb);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 0%;
+}
+
+.progress-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #374151;
+    text-align: center;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: #3b82f6;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.btn-secondary {
+    background: #6b7280;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #4b5563;
+}
+
+.btn-outline {
+    background: transparent;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+}
+
+.btn-outline:hover {
+    background: #3b82f6;
+    color: white;
+}
+
+.log-container {
+    margin-top: 1.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.log-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+    transition: background-color 0.2s ease;
+}
+
+.log-item:hover {
+    background: #f9fafb;
+}
+
+.log-time {
+    color: #6b7280;
+    font-size: 0.875rem;
+    font-family: monospace;
+    min-width: 120px;
+}
+
+.log-message {
+    flex: 1;
+    color: #374151;
+    font-weight: 500;
+}
+
+.log-status {
+    margin-right: 0.5rem;
+}
+
+.log-status.success {
+    color: #10b981;
+}
+
+.log-status.info {
+    color: #3b82f6;
+}
+
+.log-status.error {
+    color: #ef4444;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: #ffffff;
+    margin: 10% auto;
+    padding: 0;
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 20px 25px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: #1f2937;
+    font-weight: 700;
+    font-size: 1.25rem;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.modal-close:hover {
+    background-color: #f3f4f6;
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.result-item {
+    padding: 1rem;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+
+.result-item.success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    color: #166534;
+}
+
+.result-item.error {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #dc2626;
+}
+
+.result-item.info {
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    color: #1e40af;
+}
+
+.modal-footer {
+    padding: 2rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sync-hero {
+        padding: 2rem 0;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .sync-container {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .modal-content {
+        margin: 20% auto;
+        width: 95%;
+    }
+}
+</style>
+{% endblock %}

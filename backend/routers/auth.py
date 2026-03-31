@@ -1,15 +1,18 @@
-from fastapi import APIRouter, Request, Form, HTTPException, Depends
+from fastapi import APIRouter, Request, Form, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from datetime import timedelta
+from datetime import datetime, timedelta
+import sqlite3
+import bcrypt
+import jwt
 import sys
 import os
+from pathlib import Path
 
-# Ajouter le répertoire parent au path pour les imports
+# Importer les fonctions d'authentification centrales
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-from auth import authenticate_user, create_access_token, get_password_hash, get_user_from_token
-from models import UserCreate, UserLogin
+from auth import get_user_from_token, create_access_token
+from config import SECRET_KEY, ALGORITHM
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
@@ -65,105 +68,110 @@ async def update_profile(
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
-    """Page de connexion"""
+    """Page de connexion principale (interface desktop)"""
     # Vérifier si déjà connecté
     user = get_user_from_token(request)
     if user:
         return RedirectResponse(url="/dashboard", status_code=303)
     
-    return templates.TemplateResponse("login.html", {"request": request})
+    return templates.TemplateResponse("login_desktop.html", {"request": request})
 
 @router.post("/login")
-async def login(
-    request: Request,
-    email: str = Form(...),
-    password: str = Form(...)
-):
-    """Traitement du formulaire de connexion"""
+async def login(request: Request, email: str = Form(...), password: str = Form(...)):
+    """Login principal avec redirection vers dashboard desktop"""
     print(f"Tentative de connexion pour: {email}")
-    user = authenticate_user(email, password)
     
-    if not user:
-        print("Échec d'authentification")
-        return templates.TemplateResponse("login.html", {
+    try:
+        conn = sqlite3.connect('database.db')
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+        conn.close()
+        
+        if not user:
+            print("Utilisateur non trouvé")
+            return templates.TemplateResponse("login_desktop.html", {
+                "request": request,
+                "error": "Aucun compte trouvé avec cet email"
+            })
+        
+        if not bcrypt.checkpw(password.encode('utf-8'), user[2].encode('utf-8')):
+            print("Mot de passe incorrect")
+            return templates.TemplateResponse("login_desktop.html", {
+                "request": request,
+                "error": "Mot de passe incorrect. Veuillez réessayer."
+            })
+        
+        print("Utilisateur authentifié avec succès")
+        
+        # Créer le token
+        token = create_access_token({"sub": email})
+        print(f"Token créé: {token[:50]}...")
+        
+        # Définir le cookie
+        response = RedirectResponse(url="/dashboard", status_code=303)
+        response.set_cookie(
+            key="access_token",
+            value=token,
+            httponly=False,  # Pour le debug
+            secure=False,  # Mettre True en production avec HTTPS
+            samesite="lax",
+            max_age=1800,  # 30 minutes
+            path="/"  # Ajout du path
+        )
+        print("Cookie défini avec path=/")
+        return response
+        
+    except Exception as e:
+        print(f"Erreur lors de la connexion: {e}")
+        return templates.TemplateResponse("login_desktop.html", {
             "request": request,
-            "error": "Email ou mot de passe incorrect"
+            "error": f"Erreur technique: {str(e)}"
         })
-    
-    print("Utilisateur authentifié avec succès")
-    # Créer le token
-    access_token = create_access_token(
-        data={"sub": user["email"]},
-        expires_delta=timedelta(minutes=30)
-    )
-    
-    print(f"Token créé: {access_token[:50]}...")
-    
-    response = RedirectResponse(url="/dashboard", status_code=303)
-    response.set_cookie(
-        key="access_token",
-        value=access_token,
-        httponly=False,  # Pour le debug
-        secure=False,  # Mettre True en production avec HTTPS
-        samesite="lax",
-        max_age=1800,  # 30 minutes
-        expires=1800,
-        path="/"
-    )
-    print("Cookie défini avec path=/")
-    return response
 
 @router.post("/register")
-async def register(
-    request: Request,
-    email: str = Form(...),
-    password: str = Form(...),
-    confirm_password: str = Form(...)
-):
-    """Traitement du formulaire d'inscription"""
-    
-    if password != confirm_password:
-        return templates.TemplateResponse("register.html", {
-            "request": request,
-            "error": "Les mots de passe ne correspondent pas"
-        })
-    
-    if len(password) < 6:
-        return templates.TemplateResponse("register.html", {
-            "request": request,
-            "error": "Le mot de passe doit contenir au moins 6 caractères"
-        })
-    
-    # Vérifier si l'utilisateur existe déjà
-    import sqlite3
-    from pathlib import Path
-    
-    db_path = Path(__file__).parent.parent / "database.db"
-    conn = sqlite3.connect(db_path)
+async def register(request: Request, email: str = Form(...), password: str = Form(...), 
+                   nom: str = Form(...), prenom: str = Form(...), telephone: str = Form(None),
+                   date_naissance: str = Form(None)):
+    """Inscription principale avec redirection vers login desktop"""
+    conn = sqlite3.connect('database.db')
     cursor = conn.cursor()
     
-    cursor.execute('SELECT id FROM users WHERE email = ?', (email,))
-    existing_user = cursor.fetchone()
-    
-    if existing_user:
-        conn.close()
-        return templates.TemplateResponse("register.html", {
+    # Vérifier si l'utilisateur existe déjà
+    cursor.execute("SELECT email FROM users WHERE email = ?", (email,))
+    if cursor.fetchone():
+        return templates.TemplateResponse("register_desktop.html", {
             "request": request,
             "error": "Cet email est déjà utilisé"
         })
     
-    # Créer le nouvel utilisateur
-    password_hash = get_password_hash(password)
-    cursor.execute('''
-        INSERT INTO users (email, password_hash, role)
-        VALUES (?, ?, ?)
-    ''', (email, password_hash, 'user'))
+    # Hasher le mot de passe
+    password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+    
+    # Insérer l'utilisateur
+    cursor.execute("""
+        INSERT INTO users (email, password_hash, nom, prenom, telephone, date_naissance, role)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    """, (email, password_hash.decode('utf-8'), nom, prenom, telephone, date_naissance, 'user'))
     
     conn.commit()
     conn.close()
     
-    # Rediriger vers la page de connexion
-    return RedirectResponse(url="/login?message=Inscription réussie", status_code=303)
+    return templates.TemplateResponse("login_desktop.html", {
+        "request": request,
+        "message": "Inscription réussie ! Vous pouvez maintenant vous connecter"
+    })
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    """Page de connexion principale (interface desktop)"""
+    return templates.TemplateResponse("login_desktop.html", {"request": request})
+
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    """Page d'inscription principale (interface desktop)"""
+    return templates.TemplateResponse("register_desktop.html", {"request": request})
 
 @router.get("/logout")
 async def logout():

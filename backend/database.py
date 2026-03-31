@@ -63,9 +63,58 @@ def init_db():
             date_creation TEXT NOT NULL,
             statut TEXT DEFAULT 'non_traite',
             reponse_admin TEXT,
-            date_reponse TEXT
+            date_reponse TEXT,
+            sujet TEXT,
+            urgent INTEGER DEFAULT 0,
+            newsletter INTEGER DEFAULT 0,
+            email_sent INTEGER DEFAULT 0,
+            email_sent_date TEXT,
+            service_type TEXT,
+            surface TEXT,
+            frequency TEXT
         )
     ''')
+    
+    # Ajouter les colonnes manquantes si elles n'existent pas
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN sujet TEXT')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN urgent INTEGER DEFAULT 0')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN newsletter INTEGER DEFAULT 0')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN email_sent INTEGER DEFAULT 0')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN email_sent_date TEXT')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN service_type TEXT')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN surface TEXT')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
+    
+    try:
+        cursor.execute('ALTER TABLE contact_messages ADD COLUMN frequency TEXT')
+    except sqlite3.OperationalError:
+        pass  # La colonne existe déjà
     
     # Vérifier si l'admin existe déjà
     cursor.execute('SELECT id FROM users WHERE email = ?', ('nathanratte702@gmx.fr',))
@@ -94,7 +143,61 @@ else:
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
     tables = [row[0] for row in cursor.fetchall()]
     
-    if 'users' not in tables or 'contacts' not in tables:
+    if 'users' not in tables or 'contacts' not in tables or 'contact_messages' not in tables:
         init_db()
-    
-    conn.close()
+    else:
+        # Mettre à jour la table contact_messages avec les nouvelles colonnes
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # Ajouter les colonnes manquantes
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN sujet TEXT')
+            print("Colonne 'sujet' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN urgent INTEGER DEFAULT 0')
+            print("Colonne 'urgent' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN newsletter INTEGER DEFAULT 0')
+            print("Colonne 'newsletter' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN email_sent INTEGER DEFAULT 0')
+            print("Colonne 'email_sent' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN email_sent_date TEXT')
+            print("Colonne 'email_sent_date' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN service_type TEXT')
+            print("Colonne 'service_type' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN surface TEXT')
+            print("Colonne 'surface' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        try:
+            cursor.execute('ALTER TABLE contact_messages ADD COLUMN frequency TEXT')
+            print("Colonne 'frequency' ajoutée")
+        except sqlite3.OperationalError:
+            pass
+        
+        conn.commit()
+        conn.close()

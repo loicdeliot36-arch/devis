@@ -1,0 +1,1111 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Contact - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="contact-hero">
+    <div class="hero-content">
+        <h1>📞 Contactez-nous</h1>
+        <p>Nous sommes à votre disposition pour répondre à toutes vos questions</p>
+        <div class="contact-stats">
+            <div class="stat-item">
+                <span class="stat-number">{{ total_messages }}</span>
+                <span class="stat-label">Messages traités</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">{{ treatment_rate }}%</span>
+                <span class="stat-label">Taux de réponse</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number">24h</span>
+                <span class="stat-label">Délai moyen</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="contact-container">
+    <div class="contact-form-section">
+        <div class="card fade-in">
+            <div class="card-header">
+                <h2>📝 Envoyez-nous un message</h2>
+                <p>Remplissez le formulaire ci-dessous et nous vous répondrons rapidement</p>
+            </div>
+            
+            <!-- Messages de succès/erreur -->
+            {% if user %}
+            <div class="alert alert-info">
+                <span>👋</span>
+                <div>
+                    <strong>Bonjour {{ user.prenom }} !</strong>
+                    <p>Vos informations sont pré-remplies. Modifiez-les si nécessaire.</p>
+                </div>
+            </div>
+            {% endif %}
+            
+            <form method="post" action="/api/contact" class="contact-form" id="contactForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="nom">Nom complet *</label>
+                        <input type="text" id="nom" name="nom" required class="form-control" 
+                            {% if user %}value="{{ user.nom or '' }}"{% endif %}
+                            placeholder="Entrez votre nom complet">
+                        <span class="form-icon">👤</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required class="form-control" 
+                            {% if user %}value="{{ user.email or '' }}" readonly{% endif %}
+                            placeholder="votre.email@example.com">
+                        <span class="form-icon">📧</span>
+                        {% if user %}<small>Email pré-rempli depuis votre compte</small>{% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="telephone">Téléphone</label>
+                    <input type="tel" id="telephone" name="telephone" class="form-control" 
+                        {% if user %}value="{{ user.telephone or '' }}"{% endif %}
+                        placeholder="06 12 34 56 78">
+                    <span class="form-icon">📱</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="sujet">Sujet *</label>
+                    <select id="sujet" name="sujet" required class="form-control">
+                        <option value="">Choisissez un sujet</option>
+                        <option value="demande_devis">📋 Demande de devis</option>
+                        <option value="information">ℹ️ Demande d'information</option>
+                        <option value="rendez_vous">📅 Prise de rendez-vous</option>
+                        <option value="reclamation">⚠️ Réclamation</option>
+                        <option value="autre">📝 Autre</option>
+                    </select>
+                    <span class="form-icon">📌</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="message">Message *</label>
+                    <textarea id="message" name="message" required class="form-control" rows="6" 
+                        placeholder="Décrivez votre demande en détail..."></textarea>
+                    <span class="form-icon">💬</span>
+                    <small id="charCount">0 caractères</small>
+                </div>
+                
+                <div class="form-options">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="urgent" name="urgent">
+                        <span>🚨 Demande urgente</span>
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="newsletter" name="newsletter" checked>
+                        <span>📬 Je souhaite recevoir la newsletter</span>
+                    </label>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">
+                        <span>🔄</span>
+                        Réinitialiser
+                    </button>
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <span>📤</span>
+                        Envoyer le message
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="card fade-in">
+            <div class="card-header">
+                <h3>📞 Nos coordonnées</h3>
+            </div>
+            
+            <div class="contact-info">
+                <div class="info-item">
+                    <span class="info-icon">📍</span>
+                    <div>
+                        <strong>Adresse</strong>
+                        <p>123 Avenue des Services<br>75001 Paris, France</p>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-icon">📞</span>
+                    <div>
+                        <strong>Téléphone</strong>
+                        <p>01 23 45 67 89</p>
+                        <small>Lun-Ven: 8h-18h, Sam: 9h-12h</small>
+                    </div>
+                </div>
+                
+                <div class="info-item">
+                    <span class="info-icon">📧</span>
+                    <div>
+                        <strong>Email</strong>
+                        <p>contact@rdmenage.fr</p>
+                        <small>Réponse sous 24h</small>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card fade-in">
+            <h3>⏰ Nos horaires</h3>
+            <div class="schedule">
+                <div class="schedule-day">
+                    <span>Lundi - Vendredi</span>
+                    <span>8h - 18h</span>
+                </div>
+                <div class="schedule-day">
+                    <span>Samedi</span>
+                    <span>9h - 12h</span>
+                </div>
+                <div class="schedule-day">
+                    <span>Dimanche</span>
+                    <span>Fermé</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-card fade-in">
+            <h3>🚀 Services rapides</h3>
+            <div class="quick-services">
+                <div class="service-item">
+                    <span class="service-icon">📋</span>
+                    <div>
+                        <strong>Devis en ligne</strong>
+                        <p>Obtenez un devis instantané</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">Demander</button>
+                </div>
+                
+                <div class="service-item">
+                    <span class="service-icon">📅</span>
+                    <div>
+                        <strong>Rendez-vous</strong>
+                        <p>Prenez rendez-vous en ligne</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">Réserver</button>
+                </div>
+                
+                <div class="service-item">
+                    <span class="service-icon">💬</span>
+                    <div>
+                        <strong>Chat en direct</strong>
+                        <p>Discutez avec un conseiller</p>
+                    </div>
+                    <button class="btn btn-outline btn-sm">Chatter</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div id="confirmModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>✅ Message envoyé !</h3>
+            <button class="modal-close" onclick="closeConfirmModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.</p>
+            <div class="confirmation-details">
+                <p><strong>Référence :</strong> #<span id="messageRef"></span></p>
+                <p><strong>Délai de réponse :</strong> Sous 24h</p>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-primary" onclick="closeConfirmModal()">Fermer</button>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+// Gestion du formulaire de contact
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> Envoi en cours...';
+    
+    try {
+        const formData = new FormData(e.target);
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            // Générer une référence de message
+            const messageRef = 'MSG' + Date.now().toString().slice(-6);
+            document.getElementById('messageRef').textContent = messageRef;
+            
+            // Afficher la modal de confirmation
+            document.getElementById('confirmModal').style.display = 'block';
+            
+            // Réinitialiser le formulaire
+            e.target.reset();
+            updateCharCount();
+            
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Erreur lors de l\'envoi', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+// Compteur de caractères
+function updateCharCount() {
+    const message = document.getElementById('message').value;
+    const charCount = document.getElementById('charCount');
+    charCount.textContent = message.length + ' caractères';
+    
+    if (message.length > 500) {
+        charCount.style.color = 'var(--accent-orange)';
+    } else {
+        charCount.style.color = 'var(--text-secondary)';
+    }
+}
+
+document.getElementById('message').addEventListener('input', updateCharCount);
+
+// Réinitialiser le formulaire
+function resetForm() {
+    document.getElementById('contactForm').reset();
+    updateCharCount();
+    showNotification('Formulaire réinitialisé', 'info');
+}
+
+// Modal de confirmation
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+// Fermer les modals au clic extérieur
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
+// Formatage du téléphone
+document.getElementById('telephone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formatted = '';
+    
+    if (value.length > 0) {
+        if (value.length <= 2) {
+            formatted = value;
+        } else if (value.length <= 4) {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2);
+        } else if (value.length <= 6) {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4);
+        } else {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4, 6) + ' ' + value.slice(6, 8);
+        }
+    }
+    
+    e.target.value = formatted;
+});
+
+// Validation du sujet
+document.getElementById('sujet').addEventListener('change', function(e) {
+    const messageField = document.getElementById('message');
+    const sujet = e.target.value;
+    
+    // Suggestions de messages selon le sujet
+    const suggestions = {
+        'demande_devis': 'Je souhaiterais obtenir un devis pour des services de ménage. Voici mes besoins :',
+        'information': 'J\'aimerais obtenir plus d\'informations sur vos services de ménage.',
+        'rendez_vous': 'Je souhaiterais prendre rendez-vous pour une évaluation de mes besoins.',
+        'reclamation': 'Je souhaite signaler un problème concernant un service récent.',
+        'autre': ''
+    };
+    
+    if (suggestions[sujet] && !messageField.value) {
+        messageField.value = suggestions[sujet];
+        updateCharCount();
+    }
+});
+
+// Animation des statistiques
+function animateStats() {
+    const stats = document.querySelectorAll('.stat-number');
+    stats.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.floor(current);
+        }, 30);
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    updateCharCount();
+    animateStats();
+});
+</script>
+
+<style>
+.contact-hero {
+    background: linear-gradient(135deg, var(--primary-blue), var(--accent-blue));
+    color: white;
+    padding: 4rem 0;
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+}
+
+.hero-content p {
+    font-size: 1.25rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.contact-stats {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 2rem;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-number {
+    display: block;
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    opacity: 0.8;
+}
+
+.contact-container {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 3rem;
+    max-width: 1200px;
+    margin: 0 auto 3rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+.form-group {
+    position: relative;
+}
+
+.form-icon {
+    position: absolute;
+    right: 1rem;
+    top: 2.5rem;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.form-options {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-weight: 500;
+}
+
+.checkbox-label input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: end;
+    margin-top: 2rem;
+}
+
+.contact-info-section {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.info-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    transition: all 0.3s ease;
+}
+
+.info-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.info-card h3 {
+    color: var(--primary-blue);
+    margin-bottom: 1.5rem;
+    font-size: 1.25rem;
+}
+
+.contact-details {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: start;
+    gap: 1rem;
+}
+
+.contact-icon {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    flex-shrink: 0;
+    margin-top: 0.25rem;
+}
+
+.contact-item strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.contact-item p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.contact-item small {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+}
+
+.schedule {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.schedule-day {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.75rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.schedule-day:first-child {
+    font-weight: 600;
+    color: var(--primary-blue);
+}
+
+.quick-services {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.service-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+}
+
+.service-item:hover {
+    background: var(--bg-hover);
+}
+
+.service-icon {
+    font-size: 1.5rem;
+    color: var(--primary-blue);
+    margin-right: 1rem;
+}
+
+.service-item div {
+    flex: 1;
+}
+
+.service-item strong {
+    color: var(--text-primary);
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.service-item p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    margin: 10% auto;
+    padding: 0;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 500px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.modal-body {
+    padding: 2rem;
+}
+
+.confirmation-details {
+    background: var(--bg-secondary);
+    padding: 1rem;
+    border-radius: var(--radius);
+    margin-top: 1rem;
+}
+
+.confirmation-details p {
+    margin: 0.5rem 0;
+}
+
+.modal-footer {
+    padding: 2rem;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+@media (max-width: 768px) {
+    .contact-hero {
+        padding: 2rem 0;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+    }
+    
+    .contact-stats {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .contact-container {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>
+            
+            <button type="submit" class="btn btn-primary btn-lg">
+                <span>📤</span>
+                Envoyer le message
+            </button>
+        </form>
+    </div>
+    
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>💰 Demande de devis</h2>
+            <p>Obtenez un devis personnalisé pour vos besoins spécifiques</p>
+        </div>
+        
+        <form method="post" action="/api/quote" class="quote-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="devis-nom">Nom *</label>
+                    <input type="text" id="devis-nom" name="nom" required class="form-control" 
+                        {% if user %}value="{{ user.nom or '' }}" placeholder="Entrez votre nom"{% endif %}>
+                </div>
+                
+                <div class="form-group">
+                    <label for="devis-email">Email *</label>
+                    <input type="email" id="devis-email" name="email" required class="form-control" 
+                        {% if user %}value="{{ user.email or '' }}" readonly{% endif %}>
+                    {% if user %}<small style="color: var(--text-secondary); font-size: 0.875rem;">Email pré-rempli depuis votre compte</small>{% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="devis-telephone">Téléphone</label>
+                <input type="tel" id="devis-telephone" name="telephone" class="form-control" 
+                    {% if user %}value="{{ user.telephone or '' }}"{% endif %}
+                    placeholder="06 12 34 56 78">
+            </div>
+            
+            <div class="form-group">
+                <label for="devis-message">Description de vos besoins *</label>
+                <textarea id="devis-message" name="message" required class="form-control" rows="6" 
+                    placeholder="Décrivez vos besoins en détail (surface, fréquence, prestations souhaitées, etc.)"></textarea>
+            </div>
+            
+            <button type="submit" class="btn btn-success btn-lg">
+                <span>💰</span>
+                Demander un devis
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>📞 Informations de contact</h2>
+        <p>Plusieurs moyens de nous contacter</p>
+    </div>
+    
+    <div class="contact-methods">
+        <div class="contact-method">
+            <div class="contact-method-icon">📧</div>
+            <div class="contact-method-content">
+                <h3>Email</h3>
+                <p><a href="mailto:nathanratte702@gmx.fr">nathanratte702@gmx.fr</a></p>
+                <small>Réponse sous 24h</small>
+            </div>
+        </div>
+        
+        <div class="contact-method">
+            <div class="contact-method-icon">📱</div>
+            <div class="contact-method-content">
+                <h3>Téléphone</h3>
+                <p><a href="tel:0759761998">07 59 76 19 98</a></p>
+                <small>Disponible 8h-18h</small>
+            </div>
+        </div>
+        
+        <div class="contact-method">
+            <div class="contact-method-icon">📍</div>
+            <div class="contact-method-content">
+                <h3>Zone d'intervention</h3>
+                <p>Île-de-France et environs</p>
+                <p><small>Déplacement sur toute la région</small></p>
+            </div>
+        </div>
+        
+        <div class="contact-method">
+            <div class="contact-method-icon">⏰</div>
+            <div class="contact-method-content">
+                <h3>Horaires</h3>
+                <p>Lundi - Vendredi: 8h - 18h</p>
+                <p>Samedi: 9h - 17h</p>
+                <small>Dimanche: Fermé</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>❓ Questions fréquentes</h2>
+        <p>Réponses aux questions que vous pourriez vous poser</p>
+    </div>
+    
+    <div class="faq-list">
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Quels types de services proposez-vous ?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Nous proposons des services de ménage régulier, nettoyage profond, ménage de fin de chantier, et entretien vitrerie pour les particuliers et professionnels.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Comment fixer un rendez-vous ?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Vous pouvez nous contacter par téléphone, email ou via le formulaire de contact. Nous vous proposons des créneaux selon vos disponibilités.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Vos tarifs sont-ils compétitifs ?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Nous proposons des tarifs compétitifs adaptés à chaque type de prestation. Contactez-nous pour un devis personnalisé et sans engagement.</p>
+            </div>
+        </div>
+        
+        <div class="faq-item">
+            <div class="faq-question">
+                <h3>Êtes-vous assurés ?</h3>
+                <span class="faq-toggle">+</span>
+            </div>
+            <div class="faq-answer">
+                <p>Oui, nous disposons d'une assurance professionnelle complète pour garantir votre tranquillité et la sécurité de vos biens.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Gestion du formulaire de contact
+document.getElementById('contactForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submitBtn = document.getElementById('submitBtn');
+    const originalText = submitBtn.innerHTML;
+    
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span>⏳</span> Envoi en cours...';
+    
+    try {
+        const formData = new FormData(e.target);
+        const response = await fetch('/api/contact', {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            // Générer une référence de message
+            const messageRef = 'MSG' + Date.now().toString().slice(-6);
+            document.getElementById('messageRef').textContent = messageRef;
+            
+            // Afficher la modal de confirmation
+            document.getElementById('confirmModal').style.display = 'block';
+            
+            // Réinitialiser le formulaire
+            e.target.reset();
+            updateCharCount();
+            
+        } else {
+            const error = await response.json();
+            showNotification(error.detail || 'Erreur lors de l\'envoi', 'error');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showNotification('Erreur de connexion', 'error');
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalText;
+    }
+});
+
+// Compteur de caractères
+function updateCharCount() {
+    const message = document.getElementById('message').value;
+    const charCount = document.getElementById('charCount');
+    charCount.textContent = message.length + ' caractères';
+    
+    if (message.length > 500) {
+        charCount.style.color = 'var(--accent-orange)';
+    } else {
+        charCount.style.color = 'var(--text-secondary)';
+    }
+}
+
+document.getElementById('message').addEventListener('input', updateCharCount);
+
+// Réinitialiser le formulaire
+function resetForm() {
+    document.getElementById('contactForm').reset();
+    updateCharCount();
+    showNotification('Formulaire réinitialisé', 'info');
+}
+
+// Modal de confirmation
+function closeConfirmModal() {
+    document.getElementById('confirmModal').style.display = 'none';
+}
+
+// Fermer les modals au clic extérieur
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
+// Formatage du téléphone
+document.getElementById('telephone').addEventListener('input', function(e) {
+    let value = e.target.value.replace(/\s/g, '');
+    let formatted = '';
+    
+    if (value.length > 0) {
+        if (value.length <= 2) {
+            formatted = value;
+        } else if (value.length <= 4) {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2);
+        } else if (value.length <= 6) {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4);
+        } else {
+            formatted = value.slice(0, 2) + ' ' + value.slice(2, 4) + ' ' + value.slice(4, 6) + ' ' + value.slice(6, 8);
+        }
+    }
+    
+    e.target.value = formatted;
+});
+
+// Validation du sujet
+document.getElementById('sujet').addEventListener('change', function(e) {
+    const messageField = document.getElementById('message');
+    const sujet = e.target.value;
+    
+    // Suggestions de messages selon le sujet
+    const suggestions = {
+        'demande_devis': 'Je souhaiterais obtenir un devis pour des services de ménage. Voici mes besoins :',
+        'information': 'J\'aimerais obtenir plus d\'informations sur vos services de ménage.',
+        'rendez_vous': 'Je souhaiterais prendre rendez-vous pour une évaluation de mes besoins.',
+        'reclamation': 'Je souhaite signaler un problème concernant un service récent.',
+        'autre': ''
+    };
+    
+    if (suggestions[sujet] && !messageField.value) {
+        messageField.value = suggestions[sujet];
+        updateCharCount();
+    }
+});
+
+// Animation des statistiques
+function animateStats() {
+    const stats = document.querySelectorAll('.stat-number');
+    stats.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            stat.textContent = Math.floor(current);
+        }, 30);
+    });
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    updateCharCount();
+    animateStats();
+});
+</script>
+
+<style>
+.contact-form,
+.quote-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.contact-methods {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.contact-method {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    transition: all 0.3s ease;
+}
+
+.contact-method:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.contact-method-icon {
+    font-size: 2.5rem;
+    width: 70px;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+    border-radius: var(--radius);
+    flex-shrink: 0;
+}
+
+.contact-method-content h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.contact-method-content p {
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.contact-method-content a {
+    color: var(--primary-blue);
+    text-decoration: none;
+}
+
+.contact-method-content a:hover {
+    text-decoration: underline;
+}
+
+.contact-method-content small {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.faq-item {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    overflow: hidden;
+}
+
+.faq-question {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.faq-question:hover {
+    background: var(--bg-tertiary);
+}
+
+.faq-question h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.faq-toggle {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--primary-blue);
+    transition: transform 0.3s ease;
+}
+
+.faq-answer {
+    display: none;
+    padding: 1.5rem;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+}
+
+.faq-answer p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .contact-methods {
+        grid-template-columns: 1fr;
+    }
+    
+    .contact-method {
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .contact-method-icon {
+        width: 50px;
+        height: 50px;
+        font-size: 2rem;
+    }
+}
+</style>
+{% endblock %}

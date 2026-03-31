@@ -1,0 +1,368 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Messages - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="messages-container">
+    <div class="messages-header">
+        <h1>📧 Messages des clients</h1>
+        <div class="header-stats">
+            <div class="stat-card">
+                <div class="stat-icon">📨</div>
+                <div class="stat-info">
+                    <h3>{{ messages|length }}</h3>
+                    <p>Total messages</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⏳</div>
+                <div class="stat-info">
+                    <h3>{{ messages|selectattr('statut', 'equalto', 'non_traite')|list|length }}</h3>
+                    <p>En attente</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-info">
+                    <h3>{{ messages|selectattr('statut', 'equalto', 'traite')|list|length }}</h3>
+                    <p>Traités</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="messages-list">
+        {% for message in messages %}
+        <div class="message-card" data-status="{{ message.statut }}">
+            <div class="message-header">
+                <div class="message-info">
+                    <h3>{{ message.nom }}</h3>
+                    <p>{{ message.email }}</p>
+                    <span class="message-date">{{ message.date_creation[:10] }}</span>
+                </div>
+                <div class="message-status">
+                    {% if message.statut == 'non_traite' %}
+                    <span class="status-badge pending">⏳ En attente</span>
+                    {% else %}
+                    <span class="status-badge treated">✅ Traité</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="message-content">
+                <p>{{ message.message }}</p>
+            </div>
+            
+            <div class="message-actions">
+                {% if message.statut == 'non_traite' %}
+                <button class="btn btn-success" onclick="markAsTreated({{ message.id }})">
+                    ✅ Marquer traité
+                </button>
+                {% else %}
+                <button class="btn btn-secondary" onclick="markAsPending({{ message.id }})">
+                    ⏳ Marquer attente
+                </button>
+                {% endif %}
+                
+                <button class="btn btn-primary" onclick="replyToMessage({{ message.id }}, '{{ message.email }}', '{{ message.nom }}')">
+                    📧 Répondre
+                </button>
+                
+                <button class="btn btn-danger" onclick="deleteMessage({{ message.id }}, '{{ message.nom }}', '{{ message.email }}')">
+                    🗑️ Supprimer
+                </button>
+            </div>
+            
+            {% if message.reponse_admin %}
+            <div class="message-response">
+                <h4>📝 Réponse envoyée:</h4>
+                <p>{{ message.reponse_admin }}</p>
+                <small>{{ message.date_reponse }}</small>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Marquer comme traité
+async function markAsTreated(messageId) {
+    try {
+        const response = await fetch(`/api/mark-treated/${messageId}`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('Message marqué comme traité');
+            location.reload();
+        } else {
+            alert('Erreur: ' + (result.error || 'Problème lors du traitement'));
+        }
+    } catch (error) {
+        alert('Erreur de connexion');
+    }
+}
+
+// Marquer comme en attente
+async function markAsPending(messageId) {
+    try {
+        const response = await fetch(`/admin/messages/${messageId}/mark-pending`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            alert('Message marqué comme en attente');
+            location.reload();
+        } else {
+            alert('Erreur lors du traitement');
+        }
+    } catch (error) {
+        alert('Erreur de connexion');
+    }
+}
+
+// Répondre à un message
+async function replyToMessage(messageId, email, name) {
+    const response = prompt('Entrez votre réponse pour ' + name + ' (' + email + '):');
+    
+    if (!response || response.trim() === '') {
+        alert('Veuillez entrer une réponse');
+        return;
+    }
+    
+    try {
+        const apiResponse = await fetch(`/admin/messages/${messageId}/reply`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: response,
+                mark_treated: true
+            })
+        });
+        
+        const result = await apiResponse.json();
+        
+        if (result.success) {
+            if (result.email_sent) {
+                alert('✅ Réponse envoyée par email avec succès!');
+            } else {
+                alert('⚠️ Réponse enregistrée mais email pas envoyé');
+            }
+            location.reload();
+        } else {
+            alert('Erreur: ' + (result.error || 'Problème lors de l\'envoi'));
+        }
+    } catch (error) {
+        alert('Erreur de connexion');
+    }
+}
+
+// Supprimer un message
+async function deleteMessage(messageId, name, email) {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer le message de ' + name + ' (' + email + ') ?\n\nCette action est irréversible !')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/messages/${messageId}/delete`, {
+            method: 'DELETE'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert(result.message);
+            location.reload();
+        } else {
+            alert('Erreur: ' + (result.error || 'Problème lors de la suppression'));
+        }
+    } catch (error) {
+        alert('Erreur de connexion');
+    }
+}
+</script>
+
+<style>
+.messages-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.messages-header h1 {
+    font-size: 2.5rem;
+    color: var(--primary-blue);
+    margin-bottom: 1.5rem;
+}
+
+.header-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--bg-primary);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border-left: 4px solid var(--primary-blue);
+}
+
+.stat-icon {
+    font-size: 2rem;
+}
+
+.stat-info h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.stat-info p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.messages-list {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.message-card {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 1.5rem;
+    border-left: 4px solid var(--border-color);
+}
+
+.message-card[data-status="traite"] {
+    border-left-color: var(--success);
+}
+
+.message-card[data-status="non_traite"] {
+    border-left-color: var(--warning);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.message-info h3 {
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.message-info p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.message-date {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.status-badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.status-badge.pending {
+    background: var(--warning-gradient);
+    color: white;
+}
+
+.status-badge.treated {
+    background: var(--success-gradient);
+    color: white;
+}
+
+.message-content {
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+    line-height: 1.6;
+}
+
+.message-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: var(--radius);
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.875rem;
+}
+
+.btn-success {
+    background: var(--success-gradient);
+    color: white;
+}
+
+.btn-secondary {
+    background: var(--bg-gradient-2);
+    color: white;
+}
+
+.btn-primary {
+    background: var(--primary-gradient);
+    color: white;
+}
+
+.btn-danger {
+    background: var(--danger-gradient);
+    color: white;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.message-response {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    border-left: 4px solid var(--success);
+}
+
+.message-response h4 {
+    color: var(--success);
+    margin-bottom: 0.5rem;
+}
+
+.message-response p {
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.message-response small {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

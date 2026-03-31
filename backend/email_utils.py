@@ -85,6 +85,8 @@ Cet message a été envoyé depuis le formulaire de contact du site RD Ménage �
         """Envoyer la réponse de l'admin au client"""
         server = None
         try:
+            print(f"📧 Envoi de réponse au client: {client_email}")
+            
             # Créer le message
             msg = MIMEMultipart()
             msg['From'] = self.smtp_user
@@ -105,6 +107,7 @@ racheldemange702@gmail.com
 
 ---
 Cette réponse a été envoyée suite à votre demande de contact sur notre site.
+RD Ménage à Domicile - Services de ménage professionnels
             """
             
             msg.attach(MIMEText(body, 'plain', 'utf-8'))
@@ -112,20 +115,57 @@ Cette réponse a été envoyée suite à votre demande de contact sur notre site
             # Se connecter et envoyer
             server = self._connect()
             server.send_message(msg)
-            print(f"Email de reponse envoye a {client_email}")
+            print(f"✅ Email de réponse envoyé avec succès à {client_email}")
             return True
             
         except Exception as e:
-            print(f"Erreur envoi email reponse client: {e}")
+            print(f"❌ Erreur envoi email réponse client: {e}")
             return False
         finally:
             if server:
                 try:
                     server.quit()
-                    print("Connexion SMTP fermee")
+                    print("🔌 Connexion SMTP fermée")
                 except:
                     pass
     
+    def send_test_email(self) -> bool:
+        """Envoyer un email de test"""
+        try:
+            msg = MIMEMultipart()
+            msg['From'] = self.smtp_user
+            msg['To'] = self.admin_email
+            msg['Subject'] = "[RD MENAGE] Test Email SMTP"
+            
+            body = f"""
+Test de configuration SMTP réussi !
+
+Email de test envoyé le : {datetime.now().strftime('%d/%m/%Y %H:%M')}
+
+Configuration SMTP :
+- Host : {self.smtp_host}
+- Port : {self.smtp_port}
+- User : {self.smtp_user}
+
+Ceci est un email de test pour vérifier que la configuration fonctionne correctement.
+
+---
+RD Ménage à Domicile
+            """
+            
+            msg.attach(MIMEText(body, 'plain', 'utf-8'))
+            
+            server = self._connect()
+            server.send_message(msg)
+            server.quit()
+            
+            print("Email de test envoyé avec succès")
+            return True
+            
+        except Exception as e:
+            print(f"Erreur envoi email test: {e}")
+            return False
+
     def test_connection(self) -> bool:
         """Tester la connexion SMTP"""
         server = None

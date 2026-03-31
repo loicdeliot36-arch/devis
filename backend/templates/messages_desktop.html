@@ -1,0 +1,670 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Messages - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="messages-header">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>📬 Gestion des messages</h2>
+            <p>Consultez et traitez les messages des clients</p>
+        </div>
+        
+        <div class="messages-stats">
+            <div class="stat-item">
+                <div class="stat-number">{{ total_messages }}</div>
+                <div class="stat-label">Total messages</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ pending_messages }}</div>
+                <div class="stat-label">En attente</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ treated_messages }}</div>
+                <div class="stat-label">Traités</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">{{ treatment_rate }}%</div>
+                <div class="stat-label">Taux de traitement</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="messages-filters">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h3>🔍 Filtres et recherche</h3>
+        </div>
+        
+        <div class="filters-content">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="status-filter">Statut</label>
+                    <select id="status-filter" class="form-control">
+                        <option value="">Tous les messages</option>
+                        <option value="non_traite">En attente</option>
+                        <option value="traite">Traité</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="search-filter">Recherche</label>
+                    <input type="text" id="search-filter" class="form-control" 
+                           placeholder="Rechercher par nom, email...">
+                </div>
+                
+                <div class="filter-group">
+                    <label for="date-filter">Date</label>
+                    <input type="date" id="date-filter" class="form-control">
+                </div>
+                
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="applyFilters()">
+                        <span>🔍</span>
+                        Appliquer
+                    </button>
+                    <button class="btn btn-secondary" onclick="resetFilters()">
+                        <span>🔄</span>
+                        Réinitialiser
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="messages-list">
+    {% for message in messages %}
+    <div class="message-card fade-in {{ 'pending' if message.statut == 'non_traite' else 'treated' }}" 
+         data-status="{{ message.statut }}" 
+         data-name="{{ message.nom|lower }}" 
+         data-email="{{ message.email|lower }}"
+         data-date="{{ message.date_creation }}">
+        <div class="message-header">
+            <div class="message-info">
+                <h3>{{ message.nom }}</h3>
+                <p>{{ message.email }}</p>
+                {% if message.telephone %}
+                <p>📞 {{ message.telephone }}</p>
+                {% endif %}
+            </div>
+            
+            <div class="message-meta">
+                <span class="message-date">{{ message.date_creation }}</span>
+                <span class="message-status {{ message.statut }}">
+                    {{ '⏳ En attente' if message.statut == 'non_traite' else '✅ Traité' }}
+                </span>
+            </div>
+        </div>
+        
+        <div class="message-content">
+            <p>{{ message.message }}</p>
+        </div>
+        
+        <div class="message-actions">
+            {% if message.statut == 'non_traite' %}
+            <button class="btn btn-success" onclick="markAsTreated({{ message.id }})">
+                <span>✅</span>
+                Marquer comme traité
+            </button>
+            {% else %}
+            <button class="btn btn-secondary" onclick="markAsPending({{ message.id }})">
+                <span>⏳</span>
+                Marquer comme en attente
+            </button>
+            {% endif %}
+            
+            <button class="btn btn-primary" onclick="replyToMessage({{ message.id }}, '{{ message.email|replace('\'', '\\\'') }}', '{{ message.nom|replace('\'', '\\\'') }}')">
+                <span>📧</span>
+                Répondre
+            </button>
+            
+            <button class="btn btn-outline" onclick="viewMessageDetails({{ message.id }})">
+                <span>👁️</span>
+                Détails
+            </button>
+        </div>
+        
+        {% if message.reponse_admin %}
+        <div class="message-reply">
+            <h4>📧 Votre réponse</h4>
+            <p>{{ message.reponse_admin }}</p>
+            {% if message.date_reponse %}
+            <small>Envoyée le {{ message.date_reponse }}</small>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Modal de réponse -->
+<div id="replyModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📧 Répondre au message</h3>
+            <button class="modal-close" onclick="closeReplyModal()">&times;</button>
+        </div>
+        
+        <form id="replyForm" class="reply-form">
+            <input type="hidden" id="reply-message-id">
+            
+            <div class="form-group">
+                <label>Destinataire</label>
+                <input type="text" id="reply-recipient" class="form-control" readonly>
+            </div>
+            
+            <div class="form-group">
+                <label for="reply-subject">Sujet</label>
+                <input type="text" id="reply-subject" class="form-control" 
+                       value="Réponse à votre demande - RD Ménage">
+            </div>
+            
+            <div class="form-group">
+                <label for="reply-message">Message</label>
+                <textarea id="reply-message" class="form-control" rows="8" 
+                          placeholder="Rédigez votre réponse..."></textarea>
+            </div>
+            
+            <div class="form-options">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="mark-treated" checked>
+                    <span>Marquer comme traité après envoi</span>
+                </label>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeReplyModal()">
+                    Annuler
+                </button>
+                <button type="submit" class="btn btn-primary">
+                    <span>📤</span>
+                    Envoyer la réponse
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal de détails -->
+<div id="detailsModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>📋 Détails du message</h3>
+            <button class="modal-close" onclick="closeDetailsModal()">&times;</button>
+        </div>
+        
+        <div id="details-content" class="details-content">
+            <!-- Contenu chargé dynamiquement -->
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Filtrage des messages
+function applyFilters() {
+    const statusFilter = document.getElementById('status-filter').value;
+    const searchFilter = document.getElementById('search-filter').value.toLowerCase();
+    const dateFilter = document.getElementById('date-filter').value;
+    
+    const messages = document.querySelectorAll('.message-card');
+    
+    messages.forEach(message => {
+        const status = message.dataset.status;
+        const name = message.dataset.name;
+        const email = message.dataset.email;
+        const date = message.dataset.date;
+        
+        let show = true;
+        
+        // Filtre par statut
+        if (statusFilter && status !== statusFilter) {
+            show = false;
+        }
+        
+        // Filtre par recherche
+        if (searchFilter && !name.includes(searchFilter) && !email.includes(searchFilter)) {
+            show = false;
+        }
+        
+        // Filtre par date
+        if (dateFilter && date !== dateFilter) {
+            show = false;
+        }
+        
+        message.style.display = show ? 'block' : 'none';
+    });
+}
+
+function resetFilters() {
+    document.getElementById('status-filter').value = '';
+    document.getElementById('search-filter').value = '';
+    document.getElementById('date-filter').value = '';
+    applyFilters();
+}
+
+// Gestion des messages
+async function markAsTreated(messageId) {
+    try {
+        const response = await fetch(`/api/mark-treated/${messageId}`, {
+            method: 'POST'
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Message marqué comme traité', 'success');
+            location.reload();
+        } else {
+            showNotification(result.error || 'Erreur lors du traitement', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+}
+
+async function markAsPending(messageId) {
+    try {
+        const response = await fetch(`/admin/messages/${messageId}/mark-pending`, {
+            method: 'POST'
+        });
+        
+        if (response.ok) {
+            showNotification('Message marqué comme en attente', 'success');
+            location.reload();
+        } else {
+            showNotification('Erreur lors du traitement', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+}
+
+// Modal de réponse
+function replyToMessage(messageId, email, name) {
+    document.getElementById('reply-message-id').value = messageId;
+    document.getElementById('reply-recipient').value = `${name} <${email}>`;
+    document.getElementById('replyModal').style.display = 'block';
+}
+
+function closeReplyModal() {
+    document.getElementById('replyModal').style.display = 'none';
+    document.getElementById('replyForm').reset();
+}
+
+// Modal de détails
+async function viewMessageDetails(messageId) {
+    try {
+        const response = await fetch(`/admin/messages/${messageId}/details`);
+        const data = await response.json();
+        
+        if (response.ok) {
+            const detailsContent = document.getElementById('details-content');
+            detailsContent.innerHTML = `
+                <div class="detail-section">
+                    <h4>👤 Informations client</h4>
+                    <p><strong>Nom:</strong> ${data.nom}</p>
+                    <p><strong>Email:</strong> ${data.email}</p>
+                    ${data.telephone ? `<p><strong>Téléphone:</strong> ${data.telephone}</p>` : ''}
+                    <p><strong>Date:</strong> ${data.date_creation}</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>📝 Message</h4>
+                    <p>${data.message}</p>
+                </div>
+                
+                <div class="detail-section">
+                    <h4>📊 Statut</h4>
+                    <p><strong>Statut:</strong> ${data.statut === 'traite' ? '✅ Traité' : '⏳ En attente'}</p>
+                    ${data.date_reponse ? `<p><strong>Date de traitement:</strong> ${data.date_reponse}</p>` : ''}
+                </div>
+                
+                ${data.reponse_admin ? `
+                <div class="detail-section">
+                    <h4>📧 Réponse envoyée</h4>
+                    <p>${data.reponse_admin}</p>
+                    ${data.date_reponse ? `<p><small>Envoyée le ${data.date_reponse}</small></p>` : ''}
+                </div>
+                ` : ''}
+            `;
+            
+            document.getElementById('detailsModal').style.display = 'block';
+        } else {
+            showNotification('Erreur lors du chargement des détails', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+}
+
+function closeDetailsModal() {
+    document.getElementById('detailsModal').style.display = 'none';
+}
+
+// Formulaire de réponse
+document.getElementById('replyForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const messageId = document.getElementById('reply-message-id').value;
+    const message = document.getElementById('reply-message').value;
+    const markTreated = document.getElementById('mark-treated').checked;
+    
+    try {
+        const response = await fetch(`/admin/messages/${messageId}/reply`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                message: message,
+                mark_treated: markTreated
+            })
+        });
+        
+        if (response.ok) {
+            showNotification('Réponse envoyée avec succès', 'success');
+            closeReplyModal();
+            location.reload();
+        } else {
+            showNotification('Erreur lors de l\'envoi', 'error');
+        }
+    } catch (error) {
+        showNotification('Erreur de connexion', 'error');
+    }
+});
+
+// Fermer les modals au clic extérieur
+window.addEventListener('click', (e) => {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+</script>
+{% endblock %}
+
+<style>
+.messages-header {
+    margin-bottom: 2rem;
+}
+
+.messages-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+    transition: all 0.3s ease;
+}
+
+.stat-item:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.messages-filters {
+    margin-bottom: 2rem;
+}
+
+.filter-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 1rem;
+    align-items: end;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filter-group label {
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.filter-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.messages-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.message-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    transition: all 0.3s ease;
+}
+
+.message-card:hover {
+    box-shadow: var(--shadow);
+}
+
+.message-card.pending {
+    border-left: 4px solid var(--accent-orange);
+}
+
+.message-card.treated {
+    border-left: 4px solid var(--success);
+}
+
+.message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: 1rem;
+}
+
+.message-info h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.message-info p {
+    color: var(--text-secondary);
+    margin: 0.25rem 0;
+}
+
+.message-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: end;
+    gap: 0.5rem;
+}
+
+.message-date {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+}
+
+.message-status {
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.message-status.non_traite {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+}
+
+.message-status.traite {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--success);
+}
+
+.message-content {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    line-height: 1.6;
+}
+
+.message-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.message-reply {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: rgba(37, 99, 235, 0.05);
+    border-left: 3px solid var(--primary-blue);
+    border-radius: var(--radius);
+}
+
+.message-reply h4 {
+    color: var(--primary-blue);
+    margin-bottom: 0.5rem;
+}
+
+.message-reply p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+    background-color: var(--bg-primary);
+    margin: 5% auto;
+    padding: 0;
+    border-radius: var(--radius-lg);
+    width: 90%;
+    max-width: 600px;
+    box-shadow: var(--shadow-lg);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.modal-header h3 {
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+}
+
+.reply-form {
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-options {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: end;
+}
+
+.details-content {
+    padding: 1.5rem;
+}
+
+.detail-section {
+    margin-bottom: 2rem;
+}
+
+.detail-section h4 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.detail-section p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+    .messages-stats {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .filter-row {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+    
+    .message-header {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    .message-meta {
+        align-items: start;
+    }
+    
+    .message-actions {
+        flex-direction: column;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+</style>

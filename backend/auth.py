@@ -6,10 +6,8 @@ from jose import JWTError, jwt
 import sqlite3
 from pathlib import Path
 
-# Configuration
-SECRET_KEY = "votre-secret-key-tres-securisee-a-changer-en-production"
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 30
+# Importer la configuration centralisée
+from config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Vérifie si le mot de passe correspond au hash"""

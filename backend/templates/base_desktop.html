@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="RD Ménage à Domicile - Services de ménage professionnels optimisés pour PC">
+    <meta name="keywords" content="ménage, nettoyage, services, domicile, professionnel, bureau">
+    <title>{% block title %}RD Ménage à Domicile{% endblock %}</title>
+    <link rel="stylesheet" href="/static/style_desktop.css?v=2">
+    <link rel="icon" href="/static/logo.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header class="header">
+        <div class="header-content">
+            <a href="/" class="logo">
+                <img src="/static/logo.png" alt="RD Ménage" class="logo-img">
+                <div class="logo-text">
+                    <h1>RD MÉNAGE</h1>
+                    <p>À Domicile</p>
+                </div>
+            </a>
+            
+            <nav class="nav-menu">
+                <a href="/" class="nav-link">Accueil</a>
+                <a href="/contact" class="nav-link">Contact</a>
+                {% if user %}
+                    <a href="/dashboard" class="nav-link">Dashboard</a>
+                    <a href="/profile" class="nav-link">Profil</a>
+                    {% if user.role == 'admin' %}
+                    <a href="/admin/messages" class="nav-link">Messages</a>
+                    <a href="/admin/users" class="nav-link">Utilisateurs</a>
+                    {% endif %}
+                    <a href="/logout" class="nav-link">Déconnexion</a>
+                {% else %}
+                    <a href="/login" class="nav-link">Connexion</a>
+                    <a href="/register" class="nav-link">Inscription</a>
+                {% endif %}
+            </nav>
+            {% if user %}
+                <span class="nav-link user-info">{{ user.prenom }} {{ user.nom }}</span>
+            {% endif %}
+        </div>
+    </header>
+
+    <main class="main">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>RD Ménage</h3>
+                <p>Votre partenaire de confiance pour des services de ménage professionnels et personnalisés.</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Services</h3>
+                <p><a href="/contact">Ménage régulier</a></p>
+                <p><a href="/contact">Nettoyage profond</a></p>
+                <p><a href="/contact">Ménage de fin de chantier</a></p>
+                <p><a href="/contact">Entretien vitrerie</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Horaires</h3>
+                <p>Lundi - Vendredi: 8h - 18h</p>
+                <p>Samedi: 9h - 17h</p>
+                <p>Dimanche: Fermé</p>
+                <p><a href="/contact">Demande de devis</a></p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contact</h3>
+                <p>📞 07 59 76 19 98</p>
+                <p>✉️ nathanratte702@gmx.fr</p>
+                <p>📍 Région Île-de-France</p>
+                <p><a href="/contact">Formulaire de contact</a></p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2024 RD Ménage à Domicile. Tous droits réservés. | Optimisé pour PC</p>
+        </div>
+    </footer>
+
+    <script>
+        // Notifications
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `alert alert-${type}`;
+            notification.style.position = 'fixed';
+            notification.style.top = '20px';
+            notification.style.right = '20px';
+            notification.style.zIndex = '9999';
+            notification.style.minWidth = '300px';
+            notification.innerHTML = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => notification.remove(), 300);
+            }, 5000);
+        }
+        
+        // Animations au scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+        
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('fade-in');
+                }
+            });
+        }, observerOptions);
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.card, .stat-card').forEach(el => {
+                observer.observe(el);
+            });
+        });
+        
+        // Smooth scroll
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

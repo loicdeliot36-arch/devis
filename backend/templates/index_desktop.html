@@ -1,0 +1,392 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Accueil - RD Ménage à Domicile{% endblock %}
+
+{% block content %}
+<div class="hero-section">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>🏠 Services de Ménage Professionnels</h2>
+            <p>Qualité, fiabilité et satisfaction garantie pour tous vos besoins de nettoyage</p>
+        </div>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon blue">🏆</div>
+                <div class="stat-number">5+</div>
+                <div class="stat-label">Années d'expérience</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon green">😊</div>
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Clients satisfaits</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon orange">⭐</div>
+                <div class="stat-number">4.9</div>
+                <div class="stat-label">Note moyenne</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon red">🚀</div>
+                <div class="stat-number">24h</div>
+                <div class="stat-label">Réponse rapide</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>🧹 Nos Services</h2>
+            <p>Une gamme complète de services adaptés à vos besoins</p>
+        </div>
+        
+        <div class="services-list">
+            <div class="service-item">
+                <div class="service-icon">🏠</div>
+                <div class="service-content">
+                    <h3>Ménage régulier</h3>
+                    <p>Entretien hebdomadaire ou bi-hebdomadaire pour maintenir votre espace propre et sain.</p>
+                </div>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-icon">✨</div>
+                <div class="service-content">
+                    <h3>Nettoyage profond</h3>
+                    <p>Nettoyage en profondeur de toutes les surfaces, y compris les zones difficiles d'accès.</p>
+                </div>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-icon">🔨</div>
+                <div class="service-content">
+                    <h3>Fin de chantier</h3>
+                    <p>Nettoyage complet après travaux pour rendre votre logement habitable.</p>
+                </div>
+            </div>
+            
+            <div class="service-item">
+                <div class="service-icon">🪟</div>
+                <div class="service-content">
+                    <h3>Vitrerie</h3>
+                    <p>Nettoyage professionnel de toutes vos vitres et surfaces vitrées.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card fade-in">
+        <div class="card-header">
+            <h2>💎 Pourquoi nous choisir ?</h2>
+            <p>Les raisons de faire confiance à RD Ménage</p>
+        </div>
+        
+        <div class="features-list">
+            <div class="feature-item">
+                <div class="feature-icon">✅</div>
+                <div class="feature-content">
+                    <h3>Qualité garantie</h3>
+                    <p>Des standards élevés et un contrôle qualité rigoureux.</p>
+                </div>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">⏰</div>
+                <div class="feature-content">
+                    <h3>Ponctualité</h3>
+                    <p>Nous respectons vos horaires et votre planning.</p>
+                </div>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">🔒</div>
+                <div class="feature-content">
+                    <h3>Confiance</h3>
+                    <p>Équipe professionnelle et assurée pour votre tranquillité.</p>
+                </div>
+            </div>
+            
+            <div class="feature-item">
+                <div class="feature-icon">💰</div>
+                <div class="feature-content">
+                    <h3>Tarifs compétitifs</h3>
+                    <p>Des prix justes pour une qualité de service exceptionnelle.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>📞 Contactez-nous</h2>
+        <p>Obtenez votre devis personnalisé en quelques clics</p>
+    </div>
+    
+    <div class="contact-grid">
+        <div class="contact-info">
+            <div class="contact-item">
+                <div class="contact-icon">📧</div>
+                <div class="contact-details">
+                    <h3>Email</h3>
+                    <p>nathanratte702@gmx.fr</p>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <div class="contact-icon">📱</div>
+                <div class="contact-details">
+                    <h3>Téléphone</h3>
+                    <p>07 59 76 19 98</p>
+                </div>
+            </div>
+            
+            <div class="contact-item">
+                <div class="contact-icon">📍</div>
+                <div class="contact-details">
+                    <h3>Région</h3>
+                    <p>Île-de-France et environs</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="contact-cta">
+            <h3>Prêt à commencer ?</h3>
+            <p>Contactez-nous dès aujourd'hui pour un devis gratuit et personnalisé.</p>
+            <div class="cta-buttons">
+                <a href="/contact" class="btn btn-primary btn-lg">📝 Demander un devis</a>
+                <a href="tel:0759761998" class="btn btn-outline btn-lg">📞 Appeler maintenant</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if user %}
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>👋 Bienvenue {{ user.prenom }} !</h2>
+        <p>Connecté en tant que {{ user.email }}</p>
+    </div>
+    
+    <div class="user-actions">
+        <a href="/dashboard" class="btn btn-primary">🏠 Mon espace</a>
+        <a href="/profile" class="btn btn-secondary">👤 Mon profil</a>
+        {% if user.role == 'admin' %}
+        <a href="/admin/messages" class="btn btn-success">📬 Messages</a>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="card fade-in">
+    <div class="card-header">
+        <h2>🔐 Espace Client</h2>
+        <p>Connectez-vous pour accéder à vos services personnalisés</p>
+    </div>
+    
+    <div class="auth-actions">
+        <a href="/login" class="btn btn-primary">🔑 Se connecter</a>
+        <a href="/register" class="btn btn-outline">📝 S'inscrire</a>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Animation des statistiques
+document.addEventListener('DOMContentLoaded', () => {
+    const statNumbers = document.querySelectorAll('.stat-number');
+    
+    const animateValue = (element, start, end, duration) => {
+        const startTimestamp = Date.now();
+        const step = () => {
+            const timestamp = Date.now();
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const value = Math.floor(progress * (end - start) + start);
+            element.textContent = element.textContent.includes('%') ? value + '%' : value;
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            }
+        };
+        window.requestAnimationFrame(step);
+    };
+    
+    statNumbers.forEach(stat => {
+        const text = stat.textContent;
+        if (text.includes('+')) {
+            animateValue(stat, 0, parseInt(text), 2000);
+        } else if (text.includes('%')) {
+            animateValue(stat, 0, 100, 2000);
+        } else if (text.includes('.')) {
+            animateValue(stat, 0, parseFloat(text) * 10, 2000);
+            setTimeout(() => {
+                stat.textContent = text;
+            }, 2000);
+        }
+    });
+});
+</script>
+{% endblock %}
+
+<style>
+.hero-section {
+    margin-bottom: 2rem;
+}
+
+.services-list,
+.features-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.service-item,
+.feature-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius);
+    transition: all 0.3s ease;
+}
+
+.service-item:hover,
+.feature-item:hover {
+    background: var(--bg-secondary);
+    transform: translateX(5px);
+}
+
+.service-icon,
+.feature-icon {
+    font-size: 2rem;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius);
+    flex-shrink: 0;
+}
+
+.service-content,
+.feature-content {
+    flex: 1;
+}
+
+.service-content h3,
+.feature-content h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+}
+
+.service-content p,
+.feature-content p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3rem;
+    align-items: center;
+}
+
+.contact-info {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.contact-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.contact-icon {
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-blue);
+    border-radius: var(--radius);
+}
+
+.contact-details h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    color: var(--text-primary);
+}
+
+.contact-details p {
+    color: var(--text-secondary);
+    font-size: 1rem;
+}
+
+.contact-cta {
+    text-align: center;
+    padding: 2rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-lg);
+}
+
+.contact-cta h3 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.contact-cta p {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+}
+
+.user-actions,
+.auth-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 2rem;
+    }
+    
+    .cta-buttons {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-lg {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+</style>

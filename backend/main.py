@@ -11,7 +11,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
 
 # Import des routers
-from routers import public, auth, admin, messages, api, admin_management, auth_public, diagnostic
+from routers import public, auth, admin, messages, api, admin_management, auth_public, diagnostic, desktop
 
 # Import de la base de données
 from database import init_db
@@ -59,12 +59,13 @@ if RESEND_API_KEY:
 # Inclusion des routers
 app.include_router(public.router, tags=["public"])
 app.include_router(auth.router, tags=["auth"])
-app.include_router(admin.router, tags=["admin"])
+app.include_router(admin.router, tags=["admin"], prefix="/admin")
 app.include_router(messages.router, tags=["messages"])
 app.include_router(api.router, tags=["api"])
 app.include_router(admin_management.router, tags=["admin_management"])
 app.include_router(auth_public.router, tags=["auth_public"])
 app.include_router(diagnostic.router, tags=["diagnostic"])
+# Le router desktop est maintenant intégré dans public.py
 
 # Servir les fichiers statiques
 static_path = Path(__file__).parent / "static"
