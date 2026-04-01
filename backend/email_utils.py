@@ -81,6 +81,38 @@ Cet message a été envoyé depuis le formulaire de contact du site RD Ménage �
             # Ne pas lever d'exception pour ne pas bloquer le formulaire
             return False
     
+    def send_email(self, to_email: str, subject: str, content: str) -> bool:
+        """Envoyer un email simple via l'adresse technique SMTP_USER"""
+        try:
+            print(f"Envoi d'email vers {to_email}")
+            print(f"Sujet: {subject}")
+            
+            # Créer le message
+            msg = MIMEMultipart()
+            msg['From'] = self.smtp_user  # Adresse technique envoie
+            msg['To'] = to_email
+            msg['Subject'] = subject
+            
+            # Corps du message
+            body = MIMEText(content, 'plain', 'utf-8')
+            msg.attach(body)
+            
+            # Connexion et envoi
+            server = self._connect()
+            server.starttls()
+            server.login(self.smtp_user, self.smtp_pass)
+            
+            text = msg.as_string()
+            server.sendmail(self.smtp_user, to_email, text)
+            server.quit()
+            
+            print(f"Email envoye avec succes vers {to_email}")
+            return True
+            
+        except Exception as e:
+            print(f"Erreur lors de l'envoi d'email a {to_email}: {e}")
+            return False
+    
     def send_response_to_client(self, client_email: str, client_name: str, response: str) -> bool:
         """Envoyer la réponse de l'admin au client"""
         server = None

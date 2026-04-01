@@ -611,6 +611,121 @@ async def add_user(request: Request):
     except Exception as e:
         return {"error": f"Erreur: {str(e)}"}
 
+@router.get("/real-reviews", response_class=HTMLResponse)
+async def admin_real_reviews_page(request: Request):
+    """Page d'administration pour gérer les vrais avis Google"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return templates.TemplateResponse("login_desktop.html", {
+            "request": request,
+            "info": "Accès administrateur requis"
+        })
+    
+    return templates.TemplateResponse("admin_real_reviews.html", {
+        "request": request,
+        "user": user
+    })
+
+@router.post("/real-reviews")
+async def admin_add_real_reviews(request: Request):
+    """Endpoint POST pour ajouter les vrais avis Google"""
+    user = get_user_from_token(request)
+    if not user or user['role'] != 'admin':
+        return {"error": "Accès non autorisé"}
+    
+    try:
+        # Récupérer les données du formulaire
+        form_data = await request.json()
+        reviews = form_data.get('reviews', [])
+        
+        if not reviews:
+            return {"error": "Aucun avis fourni"}
+        
+        # Valider les avis
+        valid_reviews = []
+        for i, review in enumerate(reviews):
+            if not all(key in review for key in ['name', 'rating', 'text', 'date']):
+                return {"error": f"L'avis {i+1} est incomplet. Chaque avis doit avoir: name, rating, text, date"}
+            
+            if not isinstance(review['rating'], int) or review['rating'] < 1 or review['rating'] > 5:
+                return {"error": f"L'avis {i+1} a une note invalide. La note doit être entre 1 et 5."}
+            
+            valid_reviews.append({
+                'id': i + 1,
+                'name': review['name'],
+                'rating': review['rating'],
+                'text': review['text'],
+                'date': review['date'],
+                'relative_time': review['date'],
+                'source': 'manual_google_maps'
+            })
+        
+        # Calculer la moyenne
+        total_rating = sum(review['rating'] for review in valid_reviews)
+        average_rating = round(total_rating / len(valid_reviews), 1)
+        
+        # Stocker en base de données
+        import sqlite3
+        from pathlib import Path
+        from datetime import datetime
+        
+        db_path = Path(__file__).parent.parent / "database.db"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        # Créer les tables si elles n'existent pas
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS real_google_reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                rating INTEGER NOT NULL,
+                text TEXT NOT NULL,
+                date TEXT NOT NULL,
+                relative_time TEXT NOT NULL,
+                source TEXT DEFAULT 'manual',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS real_google_stats (
+                id INTEGER PRIMARY KEY,
+                average_rating REAL NOT NULL,
+                total_reviews INTEGER NOT NULL,
+                last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Vider et insérer les nouveaux avis
+        cursor.execute("DELETE FROM real_google_reviews")
+        
+        for review in valid_reviews:
+            cursor.execute("""
+                INSERT INTO real_google_reviews (name, rating, text, date, relative_time, source)
+                VALUES (?, ?, ?, ?, ?, ?)
+            """, (review['name'], review['rating'], review['text'], review['date'], review['relative_time'], review['source']))
+        
+        # Mettre à jour les stats
+        cursor.execute("""
+            INSERT OR REPLACE INTO real_google_stats (id, average_rating, total_reviews, last_updated)
+            VALUES (1, ?, ?, ?)
+        """, (average_rating, len(valid_reviews), datetime.now().isoformat()))
+        
+        conn.commit()
+        conn.close()
+        
+        return {
+            "success": True,
+            "message": f"{len(valid_reviews)} avis Google ajoutés manuellement avec succès",
+            "average_rating": average_rating,
+            "total_reviews": len(valid_reviews),
+            "reviews": valid_reviews
+        }
+        
+    except Exception as e:
+        print(f"Erreur add_real_reviews: {e}")
+        return {"error": f"Erreur: {str(e)}"}
+
 @router.post("/users/{user_id}/edit")
 async def edit_user(user_id: int, request: Request):
     """Modifier un utilisateur"""

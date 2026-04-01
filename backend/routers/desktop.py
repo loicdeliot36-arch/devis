@@ -285,9 +285,116 @@ async def desktop_login(request: Request):
         "request": request
     })
 
+@router.post("/desktop/login")
+async def desktop_login_post(request: Request):
+    """Traitement du formulaire de connexion desktop"""
+    try:
+        form_data = await request.form()
+        email = form_data.get('email')
+        password = form_data.get('password')
+        
+        if not email or not password:
+            return templates.TemplateResponse("login_desktop.html", {
+                "request": request,
+                "error": "Email et mot de passe requis"
+            })
+        
+        # Authentification (utiliser la logique existante)
+        from auth import authenticate_user, create_access_token
+        user = authenticate_user(email, password)
+        
+        if not user:
+            return templates.TemplateResponse("login_desktop.html", {
+                "request": request,
+                "error": "Email ou mot de passe incorrect"
+            })
+        
+        # Créer le token et rediriger
+        access_token = create_access_token(data={"sub": user["email"]})
+        
+        response = RedirectResponse(url="/desktop", status_code=303)
+        response.set_cookie(
+            key="access_token",
+            value=access_token,
+            max_age=1800,  # 30 minutes
+            expires=1800,
+            path="/",
+            samesite="lax",
+            httponly=True
+        )
+        
+        print(f"Utilisateur connecté: {user['email']} (rôle: {user['role']})")
+        return response
+        
+    except Exception as e:
+        print(f"Erreur connexion desktop: {e}")
+        return templates.TemplateResponse("login_desktop.html", {
+            "request": request,
+            "error": f"Erreur de connexion: {str(e)}"
+        })
+
 @router.get("/desktop/register", response_class=HTMLResponse)
 async def desktop_register(request: Request):
     """Page d'inscription optimisée pour desktop"""
     return templates.TemplateResponse("register_desktop.html", {
         "request": request
     })
+
+@router.post("/desktop/register")
+async def desktop_register_post(request: Request):
+    """Traitement du formulaire d'inscription desktop"""
+    try:
+        form_data = await request.form()
+        email = form_data.get('email')
+        password = form_data.get('password')
+        nom = form_data.get('nom', '')
+        prenom = form_data.get('prenom', '')
+        
+        if not email or not password:
+            return templates.TemplateResponse("register_desktop.html", {
+                "request": request,
+                "error": "Email et mot de passe requis"
+            })
+        
+        # Vérifier si l'utilisateur existe déjà
+        import sqlite3
+        from pathlib import Path
+        from auth import get_password_hash
+        
+        db_path = Path(__file__).parent.parent / "database.db"
+        conn = sqlite3.connect(db_path)
+        cursor = conn.cursor()
+        
+        cursor.execute("SELECT id FROM users WHERE email = ?", (email,))
+        if cursor.fetchone():
+            conn.close()
+            return templates.TemplateResponse("register_desktop.html", {
+                "request": request,
+                "error": "Cet email est déjà utilisé"
+            })
+        
+        # Créer l'utilisateur
+        hashed_password = get_password_hash(password)
+        cursor.execute("""
+            INSERT INTO users (email, password_hash, role, nom, prenom, date_creation)
+            VALUES (?, ?, 'user', ?, ?, ?)
+        """, (email, hashed_password, nom, prenom, datetime.now().isoformat()))
+        
+        user_id = cursor.lastrowid
+        conn.commit()
+        conn.close()
+        
+        print(f"Utilisateur créé: {email} (ID: {user_id})")
+        
+        # Rediriger vers la page de connexion
+        return templates.TemplateResponse("login_desktop.html", {
+            "request": request,
+            "success": "Compte créé avec succès. Vous pouvez maintenant vous connecter."
+        })
+        
+    except Exception as e:
+        print(f"Erreur inscription desktop: {e}")
+        return templates.TemplateResponse("register_desktop.html", {
+            "request": request,
+            "error": f"Erreur lors de l'inscription: {str(e)}"
+        })

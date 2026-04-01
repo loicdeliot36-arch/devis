@@ -1,0 +1,438 @@
+{% extends "base_desktop.html" %}
+
+{% block title %}Gestion des Avis Google - RD Ménage{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <div class="admin-header">
+        <h1>⭐ Gestion des Avis Google</h1>
+        <p>Intégrez vos vrais avis Google Maps de manière légale et transparente</p>
+    </div>
+
+    <div class="warning-box">
+        <h3>⚠️ Important : Avis authentiques uniquement</h3>
+        <p>L'utilisation de faux avis est illégale en France et peut entraîner des sanctions. Ce système est conçu pour afficher VOS vrais avis Google Maps de manière transparente.</p>
+    </div>
+
+    <div class="grid grid-2">
+        <!-- Section 1: Guide de configuration -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📋 Guide d'intégration</h2>
+                <p>Suivez ces étapes pour intégrer vos vrais avis</p>
+            </div>
+            
+            <div class="setup-steps">
+                <div class="step">
+                    <h3>🔑 Option 1: API Google Places</h3>
+                    <ol>
+                        <li>Créez un compte Google Cloud</li>
+                        <li>Activez l'API Google Places</li>
+                        <li>Obtenez une clé API (payante)</li>
+                        <li>Configurez la clé dans le système</li>
+                    </ol>
+                    <p><strong>Avantage:</strong> Synchronisation automatique<br>
+                    <strong>Inconvénient:</strong> Coût de l'API</p>
+                </div>
+                
+                <div class="step">
+                    <h3>✍️ Option 2: Saisie manuelle (Recommandée)</h3>
+                    <ol>
+                        <li>Allez sur votre page Google Maps</li>
+                        <li>Copiez vos vrais avis existants</li>
+                        <li>Collez-les dans le formulaire ci-contre</li>
+                        <li>Le système les affiche automatiquement</li>
+                    </ol>
+                    <p><strong>Avantage:</strong> Gratuit et légal<br>
+                    <strong>Inconvénient:</strong> Mise à jour manuelle</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section 2: Formulaire d'ajout manuel -->
+        <div class="card">
+            <div class="card-header">
+                <h2>✍️ Ajouter vos vrais avis</h2>
+                <p>Copiez-collez vos avis Google Maps existants</p>
+            </div>
+            
+            <div class="reviews-form">
+                <div class="form-group">
+                    <label for="reviews-json">Vos avis (format JSON):</label>
+                    <textarea id="reviews-json" rows="10" placeholder='[
+  {
+    "name": "Nom du client",
+    "rating": 5,
+    "text": "Texte exact de l'avis",
+    "date": "Il y a 2 semaines"
+  }
+]'></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-primary" onclick="addRealReviews()">
+                        📝 Ajouter les avis
+                    </button>
+                    <button class="btn btn-outline" onclick="loadExample()">
+                        📋 Charger exemple
+                    </button>
+                </div>
+                
+                <div id="result-message" class="result-message"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section 3: Avis actuels -->
+    <div class="card">
+        <div class="card-header">
+            <h2>📊 Vos avis actuels</h2>
+            <p>Avis Google Maps actuellement intégrés</p>
+        </div>
+        
+        <div id="current-reviews">
+            <div class="loading">Chargement des avis...</div>
+        </div>
+    </div>
+
+    <!-- Section 4: Statistiques -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">⭐</div>
+            <div class="stat-number" id="average-rating">-</div>
+            <div class="stat-label">Note moyenne</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📝</div>
+            <div class="stat-number" id="total-reviews">-</div>
+            <div class="stat-label">Total d'avis</div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🔄</div>
+            <div class="stat-number" id="last-update">-</div>
+            <div class="stat-label">Dernière mise à jour</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Charger les avis actuels au chargement de la page
+document.addEventListener('DOMContentLoaded', () => {
+    loadCurrentReviews();
+    loadStats();
+});
+
+// Charger un exemple
+function loadExample() {
+    const example = [
+        {
+            "name": "Marie Dupont",
+            "rating": 5,
+            "text": "Excellent service de ménage ! Très professionnel et ponctuel. Je recommande vivement !",
+            "date": "Il y a 2 semaines"
+        },
+        {
+            "name": "Jean Martin",
+            "rating": 4,
+            "text": "Bon service, équipe sympathique et travail soigné. Satisfait du prestation.",
+            "date": "Il y a 1 mois"
+        }
+    ];
+    
+    document.getElementById('reviews-json').value = JSON.stringify(example, null, 2);
+}
+
+// Ajouter les vrais avis
+async function addRealReviews() {
+    const textarea = document.getElementById('reviews-json');
+    const resultDiv = document.getElementById('result-message');
+    
+    try {
+        const reviews = JSON.parse(textarea.value);
+        
+        if (!Array.isArray(reviews) || reviews.length === 0) {
+            throw new Error('Les avis doivent être un tableau non vide');
+        }
+        
+        // Validation
+        for (let i = 0; i < reviews.length; i++) {
+            const review = reviews[i];
+            if (!review.name || !review.rating || !review.text || !review.date) {
+                throw new Error(`L'avis ${i+1} est incomplet (name, rating, text, date requis)`);
+            }
+            if (review.rating < 1 || review.rating > 5) {
+                throw new Error(`L'avis ${i+1} a une note invalide (doit être entre 1 et 5)`);
+            }
+        }
+        
+        resultDiv.innerHTML = '<div class="loading">Envoi en cours...</div>';
+        
+        const response = await fetch('/admin/real-reviews', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ reviews: reviews })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            resultDiv.innerHTML = `
+                <div class="success">
+                    ✅ ${data.message}<br>
+                    Note moyenne: ${data.average_rating}/5<br>
+                    Total: ${data.total_reviews} avis
+                </div>
+            `;
+            
+            // Recharger les avis et stats
+            loadCurrentReviews();
+            loadStats();
+            
+            // Vider le formulaire
+            textarea.value = '';
+        } else {
+            throw new Error(data.error || 'Erreur lors de l\'ajout');
+        }
+        
+    } catch (error) {
+        resultDiv.innerHTML = `<div class="error">❌ Erreur: ${error.message}</div>`;
+    }
+}
+
+// Charger les avis actuels
+async function loadCurrentReviews() {
+    try {
+        const response = await fetch('/api/get-real-reviews');
+        const data = await response.json();
+        
+        const container = document.getElementById('current-reviews');
+        
+        if (data.success && data.reviews.length > 0) {
+            let html = '<div class="reviews-list">';
+            
+            data.reviews.forEach(review => {
+                const stars = '⭐'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                html += `
+                    <div class="review-item">
+                        <div class="review-header">
+                            <span class="review-name">${review.name}</span>
+                            <span class="review-rating">${stars}</span>
+                        </div>
+                        <p class="review-text">${review.text}</p>
+                        <small class="review-date">${review.date} (${review.source})</small>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        } else {
+            container.innerHTML = '<div class="no-reviews">Aucun avis intégré pour le moment. Utilisez le formulaire ci-dessus pour ajouter vos vrais avis Google Maps.</div>';
+        }
+        
+    } catch (error) {
+        document.getElementById('current-reviews').innerHTML = '<div class="error">Erreur lors du chargement des avis</div>';
+    }
+}
+
+// Charger les statistiques
+async function loadStats() {
+    try {
+        const response = await fetch('/api/get-real-reviews');
+        const data = await response.json();
+        
+        if (data.success && data.stats) {
+            document.getElementById('average-rating').textContent = data.stats.average_rating.toFixed(1);
+            document.getElementById('total-reviews').textContent = data.stats.total_reviews;
+            
+            if (data.stats.last_updated) {
+                const date = new Date(data.stats.last_updated);
+                document.getElementById('last-update').textContent = date.toLocaleDateString('fr-FR');
+            } else {
+                document.getElementById('last-update').textContent = 'Jamais';
+            }
+        } else {
+            document.getElementById('average-rating').textContent = '-';
+            document.getElementById('total-reviews').textContent = '0';
+            document.getElementById('last-update').textContent = 'Jamais';
+        }
+        
+    } catch (error) {
+        console.error('Erreur stats:', error);
+    }
+}
+</script>
+
+<style>
+.admin-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+.admin-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.admin-header h1 {
+    color: var(--primary-blue);
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.warning-box {
+    background: #fef3c7;
+    border: 2px solid #f59e0b;
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.warning-box h3 {
+    color: #d97706;
+    margin-bottom: 0.5rem;
+}
+
+.warning-box p {
+    color: #92400e;
+    margin: 0;
+}
+
+.setup-steps .step {
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.setup-steps h3 {
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+}
+
+.setup-steps ol {
+    margin: 1rem 0;
+    padding-left: 1.5rem;
+}
+
+.setup-steps li {
+    margin-bottom: 0.5rem;
+}
+
+.reviews-form textarea {
+    width: 100%;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1rem;
+}
+
+.result-message {
+    margin-top: 1rem;
+    padding: 1rem;
+    border-radius: var(--radius);
+}
+
+.result-message.loading {
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.result-message.success {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.result-message.error {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+.reviews-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.review-item {
+    background: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary-blue);
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.review-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.review-rating {
+    color: #fbbf24;
+}
+
+.review-text {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.review-date {
+    color: var(--text-light);
+    font-size: 0.875rem;
+}
+
+.no-reviews {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.stat-card {
+    background: var(--bg-primary);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    text-align: center;
+    border-left: 4px solid var(--primary-blue);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    color: var(--text-secondary);
+}
+</style>
+{% endblock %}

@@ -56,18 +56,26 @@ async def sync_messages():
         conn = sqlite3.connect(db_path)
         cursor = conn.cursor()
         
-        # Compter les messages non synchronisés
-        cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE email_sent = 0 OR email_sent IS NULL")
+        # Compter les messages non synchronisés (email_sent = 0)
+        cursor.execute("SELECT COUNT(*) FROM contact_messages WHERE email_sent = 0")
         unsynced_count = cursor.fetchone()[0]
         
-        # Simuler la synchronisation
-        cursor.execute("UPDATE contact_messages SET email_sent = 1 WHERE email_sent = 0 OR email_sent IS NULL")
+        if unsynced_count == 0:
+            conn.close()
+            return {
+                "success": True,
+                "message": "Tous les messages sont déjà synchronisés",
+                "synced_count": 0
+            }
+        
+        # Simuler la synchronisation - marquer comme envoyés
+        cursor.execute("UPDATE contact_messages SET email_sent = 1, email_sent_date = datetime('now') WHERE email_sent = 0")
         conn.commit()
         conn.close()
         
         return {
             "success": True,
-            "message": f"{unsynced_count} messages synchronisés",
+            "message": f"{unsynced_count} messages synchronisés avec succès",
             "synced_count": unsynced_count
         }
         

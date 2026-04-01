@@ -24,12 +24,6 @@
             </div>
             
             <div class="stat-card">
-                <div class="stat-icon orange">⭐</div>
-                <div class="stat-number">4.9</div>
-                <div class="stat-label">Note moyenne</div>
-            </div>
-            
-            <div class="stat-card">
                 <div class="stat-icon red">🚀</div>
                 <div class="stat-number">24h</div>
                 <div class="stat-label">Réponse rapide</div>
@@ -199,36 +193,28 @@
 {% block scripts %}
 <script>
 // Animation des statistiques
-document.addEventListener('DOMContentLoaded', () => {
-    const statNumbers = document.querySelectorAll('.stat-number');
+function animateStats() {
+    const stats = document.querySelectorAll('.stat-number');
     
-    const animateValue = (element, start, end, duration) => {
-        const startTimestamp = Date.now();
-        const step = () => {
-            const timestamp = Date.now();
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            const value = Math.floor(progress * (end - start) + start);
-            element.textContent = element.textContent.includes('%') ? value + '%' : value;
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
+    stats.forEach(stat => {
+        const target = parseInt(stat.textContent);
+        const increment = target / 50;
+        let current = 0;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
             }
-        };
-        window.requestAnimationFrame(step);
-    };
-    
-    statNumbers.forEach(stat => {
-        const text = stat.textContent;
-        if (text.includes('+')) {
-            animateValue(stat, 0, parseInt(text), 2000);
-        } else if (text.includes('%')) {
-            animateValue(stat, 0, 100, 2000);
-        } else if (text.includes('.')) {
-            animateValue(stat, 0, parseFloat(text) * 10, 2000);
-            setTimeout(() => {
-                stat.textContent = text;
-            }, 2000);
-        }
+            stat.textContent = Math.floor(current);
+        }, 30);
     });
+}
+
+// Animation au chargement
+document.addEventListener('DOMContentLoaded', () => {
+    animateStats();
 });
 </script>
 {% endblock %}
@@ -240,38 +226,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
 .services-list,
 .features-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+    list-style: none;
+    padding: 0;
 }
 
 .service-item,
 .feature-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 1rem;
     padding: 1rem;
     border-radius: var(--radius);
-    transition: all 0.3s ease;
+    background: var(--bg-secondary);
+    margin-bottom: 1rem;
+    transition: var(--transition);
 }
 
 .service-item:hover,
 .feature-item:hover {
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     transform: translateX(5px);
 }
 
 .service-icon,
 .feature-icon {
-    font-size: 2rem;
-    width: 50px;
-    height: 50px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius);
-    flex-shrink: 0;
+    font-size: 1.5rem;
+    min-width: 30px;
 }
 
 .service-content,
@@ -371,6 +351,351 @@ document.addEventListener('DOMContentLoaded', () => {
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+}
+
+.rating-count {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 0.25rem;
+}
+
+.stars {
+    font-size: 1.5rem;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.google-reviews-section {
+    padding: 4rem 2rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    border-radius: var(--radius-xl);
+    margin: 2rem 0;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+    position: relative;
+    overflow: hidden;
+}
+
+.google-reviews-section::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+    animation: gradient-shift 3s ease-in-out infinite;
+}
+
+@keyframes gradient-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+.reviews-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+
+.reviews-header h2 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: var(--primary-blue);
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.reviews-header p {
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.reviews-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.review-card {
+    background: white;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.1);
+    position: relative;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow: hidden;
+}
+
+.review-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    transform: scaleX(0);
+    transition: transform 0.3s ease;
+}
+
+.review-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.review-card:hover::before {
+    transform: scaleX(1);
+}
+
+.review-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.reviewer-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.reviewer-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.reviewer-details {
+    flex: 1;
+}
+
+.reviewer-name {
+    font-weight: 700;
+    color: var(--text-primary);
+    font-size: 1.1rem;
+    margin-bottom: 0.25rem;
+}
+
+.review-date {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.review-date::before {
+    content: '🕒';
+    font-size: 0.8rem;
+}
+
+.review-rating {
+    display: flex;
+    gap: 0.25rem;
+    font-size: 1.2rem;
+}
+
+.review-rating .star {
+    color: #fbbf24;
+    text-shadow: 0 2px 4px rgba(251, 191, 36, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.review-rating .star:hover {
+    transform: scale(1.2);
+}
+
+.review-text {
+    color: var(--text-secondary);
+    line-height: 1.7;
+    font-size: 1rem;
+    margin-bottom: 1.5rem;
+    font-style: italic;
+    position: relative;
+    padding: 0 1rem;
+}
+
+.review-text::before,
+.review-text::after {
+    content: '"';
+    font-size: 2rem;
+    color: rgba(59, 130, 246, 0.2);
+    position: absolute;
+    font-family: Georgia, serif;
+}
+
+.review-text::before {
+    top: -0.5rem;
+    left: -0.5rem;
+}
+
+.review-text::after {
+    bottom: -1rem;
+    right: -0.5rem;
+}
+
+.review-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 1rem;
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.review-source {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-light);
+}
+
+.review-source::before {
+    content: '📍';
+}
+
+.review-verified {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: #10b981;
+    font-weight: 600;
+}
+
+.review-verified::before {
+    content: '✓';
+    background: #10b981;
+    color: white;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+}
+
+.reviews-actions {
+    text-align: center;
+    margin-top: 3rem;
+}
+
+.google-review-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #4285f4, #1967d2);
+    color: white;
+    text-decoration: none;
+    border-radius: 50px;
+    font-weight: 600;
+    font-size: 1.1rem;
+    box-shadow: 0 8px 20px rgba(66, 133, 244, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.google-review-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s ease;
+}
+
+.google-review-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 30px rgba(66, 133, 244, 0.4);
+    background: linear-gradient(135deg, #1967d2, #4285f4);
+}
+
+.google-review-btn:hover::before {
+    left: 100%;
+}
+
+.google-review-btn:active {
+    transform: translateY(-1px);
+}
+
+.google-logo {
+    width: 24px;
+    height: 24px;
+    background: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #4285f4;
+    font-size: 0.9rem;
+}
+
+/* Loading animation */
+.reviews-loading {
+    text-align: center;
+    padding: 4rem 2rem;
+}
+
+.reviews-loading .spinner {
+    width: 50px;
+    height: 50px;
+    border: 3px solid rgba(59, 130, 246, 0.2);
+    border-top: 3px solid #3b82f6;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 1rem;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .reviews-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .reviews-header h2 {
+        font-size: 2rem;
+    }
+    
+    .review-card {
+        padding: 1.5rem;
+    }
+    
+    .google-review-btn {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+    }
 }
 
 @media (max-width: 768px) {
