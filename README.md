@@ -1,165 +1,149 @@
-# Formulaires de Contact & Devis avec Gmail
+# StreamVault
 
-Application web minimaliste pour gérer les demandes de contact et devis via formulaires HTML, avec envoi d'emails via Gmail.
+Application de **streaming personnelle** : ajoutez films et séries depuis l’interface en recherchant par nom sur **IMDB** (via l’API OMDb), puis associez vos fichiers vidéo locaux.
 
-## 🚀 Démarrage Local
+## Fonctionnalités
 
-### Prérequis
-- Python 3.11+
-- pip
+- Recherche par titre (film / série) → métadonnées IMDB : synopsis, acteurs, affiche, note, genre…
+- Bibliothèque type Netflix (accueil, détail, lecteur vidéo)
+- Upload de fichiers ou liaison d’un chemin local (`C:\Videos\…`)
+- Séries : gestion par saison / épisode
+- Streaming avec reprise (HTTP Range)
 
-### Configuration
+## Prérequis
 
-1. **Cloner/Télécharger le projet**
+- [Node.js](https://nodejs.org/) 18+ (aucun Python ni outil de compilation requis)
+- Clé API OMDb gratuite : https://www.omdbapi.com/apikey.aspx
+
+## Installation
+
 ```bash
-cd formulaires-contact
+cd streamvault
+copy .env.example .env
+# Éditez .env et mettez votre OMDB_API_KEY
+
+npm run setup
 ```
 
-2. **Créer l'environnement virtuel**
+## Version simple (ouvrir un port sur la box)
+
+C’est **exactement** ça : vous ouvrez un port sur la box → il pointe vers votre PC → le site tourne sur ce port.
+
+1. **Une fois** : `npm run setup` + fichier `.env` avec `ADMIN_PASSWORD=...`
+2. **Quand vos potes veulent regarder** : double-cliquez `demarrer.bat` (ou `npm run share`) — **laissez la fenêtre ouverte**
+3. **Box** : redirection **port externe** (ex. 8193) → **IP du PC** + **même port que dans `.env`** (ex. `PORT=3001`)
+4. **Potes** : `http://VOTRE_IP_PUBLIQUE:8193`
+
+`npm run share` n’est pas un truc bizarre : ça **construit le site** et le **lance sur un seul port**. Sans ça, rien n’écoute sur votre PC.
+
+---
+
+## Deux modes — pourquoi les ports changent
+
+| Mode | Commande | Ports | Usage |
+|------|----------|-------|--------|
+| **Développement** | `npm run dev` | **5173** = site, **3001** = API | Chez vous pour coder |
+| **Partage / potes** | `npm run share` | **Un seul port** (défaut 3001) = site + API + vidéos | Internet / box |
+
+En `npm run share`, le serveur envoie **l’interface React et l’API** sur le **même port** (comme Netflix en production). Ce n’est pas « 3001 = API seulement ».
+
+Vous pouvez mettre `PORT=5173` dans `.env` si vous voulez que ce port soit « le site » — redirigez alors la box vers **5173** en interne.
+
+## Lancement (vous seul)
+
 ```bash
-python -m venv venv
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+npm run dev
 ```
 
-3. **Installer les dépendances**
-```bash
-pip install -r backend/requirements.txt
-```
+- Vous : http://localhost:5173 → **Connexion admin** avec `ADMIN_PASSWORD`
 
-4. **Configurer Gmail** (IMPORTANT)
+## Partager avec vos potes (réseau local)
 
-   a. Activer l'authentification 2FA sur votre compte Google
-   
-   b. Générer un "mot de passe d'application" :
-      - Aller sur : https://myaccount.google.com/apppasswords
-      - Sélectionner "Mail" et "Windows"
-      - Copier le mot de passe généré
-   
-   c. Créer un fichier `.env` à la racine du projet :
-   ```env
-   GMAIL_USER=votre_email@gmail.com
-   GMAIL_PASSWORD=xxxx xxxx xxxx xxxx
-   RECIPIENT_EMAIL=votre_email@gmail.com
+1. Dans `.env` :
+   ```
+   ADMIN_PASSWORD=votre_mot_de_passe
+   HOST=0.0.0.0
    ```
 
-5. **Lancer l'application**
-```bash
-cd backend
-python main.py
+2. Lancez en mode partage (tout sur un seul port) :
+   ```bash
+   npm run share
+   ```
+
+3. Le terminal affiche une adresse **Réseau**, ex. `http://192.168.1.42:3001`  
+   → Envoyez ce lien à vos potes (même Wi‑Fi).
+
+4. **Vous** : ouvrez le lien → **Connexion admin** → ajoutez les films.  
+   **Vos potes** : ouvrent le même lien → badge **Invité** → regardent seulement.
+
+Les potes ne peuvent pas ajouter, supprimer ni uploader (bloqué côté serveur).
+
+### Pare-feu Windows
+
+Autorisez Node.js sur le réseau privé si Windows demande.
+
+## Amis à distance (pas chez vous)
+
+Deux méthodes. **Le mode `npm run share` est obligatoire** (un seul port, ex. 3001).
+
+### Méthode A — Tunnel (le plus simple, sans toucher à la box)
+
+1. Terminal 1 :
+   ```bash
+   npm run share
+   ```
+2. Terminal 2 :
+   ```bash
+   npm run tunnel
+   ```
+3. Localtunnel affiche une URL du type `https://xxxx.loca.lt` → **envoyez ce lien** à vos potes.
+4. Votre PC doit rester allumé avec les deux commandes qui tournent.
+
+Pas d’ouverture de port sur la box. Gratuit, mais l’URL change à chaque fois (sauf compte payant).
+
+### Méthode B — Ouvrir un port sur la box (redirection NAT)
+
+1. `.env` : `ADMIN_PASSWORD=...` et `HOST=0.0.0.0`
+2. `npm run share`
+3. **IP locale du PC** (PowerShell) : `ipconfig` → ex. `192.168.1.42`
+4. **Pare-feu Windows** : autoriser le port **3001** entrant pour Node.js
+5. **Box internet** (Freebox, Livebox, SFR…) :
+   - Paramètres → NAT / Redirection de ports / Port forwarding
+   - Créer une règle : **TCP**, port externe **3001** → IP locale **192.168.1.42**, port interne **3001**
+6. **IP publique** : cherchez « mon ip » sur Google → ex. `88.123.45.67`
+7. Lien pour vos potes : `http://88.123.45.67:3001`
+
+Si ça ne marche pas : votre FAI utilise peut‑être la **CGNAT** (pas d’IP publique directe) → utilisez la **méthode A (tunnel)** ou **Tailscale**.
+
+### Sécurité (important sur Internet)
+
+- Mettez un **mot de passe admin fort** dans `.env` — ne le donnez **jamais** à vos potes
+- Seuls les invités ont besoin du lien ; ils ne peuvent pas ajouter de films
+- C’est du HTTP (pas HTTPS) : ne partagez pas de données bancaires sur ce serveur
+- Coupez `npm run share` quand vous n’en avez plus besoin
+
+### Tailscale (alternative très fiable)
+
+Installez [Tailscale](https://tailscale.com/) sur votre PC et chez chaque pote : ils accèdent à `http://100.x.x.x:3001` (IP Tailscale de votre PC) sans ouvrir la box. Gratuit pour usage perso.
+
+## Utilisation
+
+1. Cliquez sur **+ Ajouter**
+   - **Lien IMDB** : `https://www.imdb.com/title/tt1375666/` ou l’id `tt1375666`
+   - **Recherche** : tapez le nom du film ou de la série
+2. Sur la fiche du média, associez la vidéo :
+   - upload de fichier
+   - chemin local : `C:\Videos\mon-film.mkv`
+   - **URL directe** : `https://serveur.com/video.mp4` (fichier vidéo accessible en HTTP, pas YouTube)
+3. Pour une série, renseignez saison / épisode avant chaque source
+4. Lancez la lecture depuis l’accueil ou la fiche détail
+
+## Structure
+
 ```
-
-Ouvrir : http://localhost:8000
-
-## 📦 Déploiement sur Fly.io
-
-### Prérequis
-- Compte [Fly.io](https://fly.io)
-- CLI Fly.io installée : `brew install flyctl` (Mac) ou [installer depuis le site](https://fly.io/docs/hands-on/install-flyctl/)
-
-### Déploiement
-
-1. **Configurer les secrets**
-```bash
-flyctl secrets set GMAIL_USER=votre_email@gmail.com
-flyctl secrets set GMAIL_PASSWORD=xxxx_xxxx_xxxx_xxxx
-flyctl secrets set RECIPIENT_EMAIL=votre_email@gmail.com
+streamvault/
+├── server/          # API Express + SQLite + streaming
+├── client/          # Interface React (Vite)
+├── data/            # Bibliothèque JSON (créée au 1er lancement)
+└── uploads/         # Vidéos uploadées via l’interface
 ```
-
-2. **Déployer**
-```bash
-flyctl launch
-# Suivre les instructions (app name, region, etc.)
-# Répondre "no" si asked to deploy now
-```
-
-3. **Déployer l'app**
-```bash
-flyctl deploy
-```
-
-4. **Voir les logs**
-```bash
-flyctl logs
-```
-
-5. **Accéder à l'app**
-```bash
-flyctl open
-```
-
-## 🔧 Architecture
-
-```
-.
-├── backend/
-│   ├── main.py           # API FastAPI + serveur statiques
-│   └── requirements.txt   # Dépendances Python
-├── frontend/
-│   └── index.html        # Formulaires (HTML/CSS/JS)
-├── Dockerfile            # Configuration Docker
-├── fly.toml             # Configuration Fly.io
-└── .env.example         # Template des variables d'env
-```
-
-## 📝 Endpoints API
-
-### POST /api/contact
-```json
-{
-  "nom": "Dupont",
-  "prenom": "Jean",
-  "telephone": "+33612345678",
-  "email": "jean@example.com",
-  "message": "Texte du message"
-}
-```
-
-### POST /api/quote
-```json
-{
-  "nom": "Dupont",
-  "prenom": "Jean",
-  "telephone": "+33612345678",
-  "email": "jean@example.com",
-  "message": "Description du projet"
-}
-```
-
-## 🎨 Customisation du Frontend
-
-Modifier `frontend/index.html` pour :
-- Changer les couleurs (variables CSS en haut)
-- Ajouter/modifier les champs du formulaire
-- Changer les labels et messages
-
-## 🐛 Dépannage
-
-### "Erreur lors de l'envoi du email"
-- Vérifier les identifiants Gmail dans `.env`
-- Vérifier que l'authentification 2FA est activée
-- Vérifier que le mot de passe d'application est correct
-- Attendre quelques secondes après la génération du mot de passe
-
-### "Port 8000 déjà utilisé"
-Modifier `main.py` ligne 104:
-```python
-uvicorn.run(app, host="0.0.0.0", port=8001)
-```
-
-### Emails ne s'envoient pas en production
-- Vérifier les logs : `flyctl logs`
-- Vérifier les secrets : `flyctl secrets list`
-
-## 📧 Configuration Gmail Alternative : OAuth2 (Optionnel)
-
-Si vous avez besoin de plus de sécurité, utiliser OAuth2 au lieu de mots de passe d'application.
-Contactez pour un guide détaillé.
-
-## 📄 Licence
-
-MIT - Libre d'utilisation
-
-## 🤝 Support
-
-Besoin d'aide ? Vérifiez les logs ou consultez la documentation de Fly.io.
